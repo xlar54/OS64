@@ -9,11 +9,11 @@ KeyboardEventHandler::KeyboardEventHandler()
 {
 }
 
-void KeyboardEventHandler::OnKeyDown(char)
+void KeyboardEventHandler::OnKeyDown(uint8_t)
 {
 }
 
-void KeyboardEventHandler::OnKeyUp(char)
+void KeyboardEventHandler::OnKeyUp(uint8_t)
 {
 }
 
@@ -57,6 +57,28 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
     if(handler == 0)
         return esp;
     
+    if (key == 0xAA)
+    {
+      handler->OnKeyUp(0xAA);
+    }
+    
+    // Extended keys
+    if(key == 0xE0)
+    {
+      uint8_t extdkey = dataport.Read();
+      
+      switch(extdkey)
+      {
+	case 0x4D: handler->OnKeyDown(0x1D); break; // Cursor Right 
+	case 0x4B: handler->OnKeyDown(0x9D); break;  // Cursor Left 
+	case 0x48: handler->OnKeyDown(0x91); break;  // Cursor Up  
+	case 0x50: handler->OnKeyDown(0x11); break;  // Cursor Down
+	case 0x47: handler->OnKeyDown(0x13); break;  // Cursor Home
+	
+      }
+      
+    }
+    
     if(key < 0x80)
     {
         switch(key)
@@ -73,7 +95,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
             case 0x0B: handler->OnKeyDown('0'); break;
 	    case 0x0C: handler->OnKeyDown('-'); break;
 	    case 0x0D: handler->OnKeyDown('='); break;
-	    case 0x0E: handler->OnKeyDown(8); break;
+	    case 0x0E: handler->OnKeyDown(0x08); break; // Backspace
             case 0x10: handler->OnKeyDown('Q'); break;
             case 0x11: handler->OnKeyDown('W'); break;
             case 0x12: handler->OnKeyDown('E'); break;
@@ -100,7 +122,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	    case 0x27: handler->OnKeyDown(';'); break;
             case 0x28: handler->OnKeyDown('\''); break;
 	    case 0x29: handler->OnKeyDown('`'); break;
-	    case 0x2A: handler->OnKeyDown('\"'); break; //LEFTSHIFT
+	    case 0x2A: handler->OnKeyDown(0x2A); break; //LEFTSHIFT
 	    case 0x2B: handler->OnKeyDown('\\'); break;
 	    case 0x2C: handler->OnKeyDown('Z'); break;
             case 0x2D: handler->OnKeyDown('X'); break;
@@ -112,7 +134,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
             case 0x33: handler->OnKeyDown(','); break;
             case 0x34: handler->OnKeyDown('.'); break;
             case 0x35: handler->OnKeyDown('-'); break;
-	    //case 0x36: handler->OnKeyDown(RIGHTSHIFT); break;
+	    case 0x36: handler->OnKeyDown(0x2A); break; // RIGHTSHIFT (just sending the same as left for now)
 	    case 0x37: handler->OnKeyDown('*'); break;
 	    //case 0x38: handler->OnKeyDown(LEFTALT); break;
             case 0x39: handler->OnKeyDown(' '); break;
@@ -144,6 +166,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	    case 0x53: handler->OnKeyDown('.'); break;
 	    //case 0x57: handler->OnKeyDown(F11); break;
 	    //case 0x58: handler->OnKeyDown(F12); break;
+
             default:
             {
                 printf("KEYBOARD 0x");
@@ -152,5 +175,8 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
             }
         }
     }
+    
+
+    
     return esp;
 }

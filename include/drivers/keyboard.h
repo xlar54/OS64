@@ -17,8 +17,8 @@ namespace myos
         public:
             KeyboardEventHandler();
 
-            virtual void OnKeyDown(char);
-            virtual void OnKeyUp(char);
+            virtual void OnKeyDown(uint8_t);
+            virtual void OnKeyUp(uint8_t);
         };
         
         class KeyboardDriver : public myos::hardwarecommunication::InterruptHandler, public Driver
