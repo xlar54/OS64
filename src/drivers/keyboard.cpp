@@ -71,10 +71,9 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
       {
 	case 0x4D: handler->OnKeyDown(0x1D); break; // Cursor Right 
 	case 0x4B: handler->OnKeyDown(0x9D); break;  // Cursor Left 
+	case 0x47: handler->OnKeyDown(0x13); break;  // Cursor Home
 	case 0x48: handler->OnKeyDown(0x91); break;  // Cursor Up  
 	case 0x50: handler->OnKeyDown(0x11); break;  // Cursor Down
-	case 0x47: handler->OnKeyDown(0x13); break;  // Cursor Home
-	
       }
       
     }
@@ -151,16 +150,16 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	    //case 0x44: handler->OnKeyDown(F10); break;
 	    //case 0x45: handler->OnKeyDown(NUMLOCK); break;
 	    //case 0x46: handler->OnKeyDown(SCROLLLOCK); break;
-	    case 0x47: handler->OnKeyDown('7'); break;
-	    case 0x48: handler->OnKeyDown('8'); break;
+	    case 0x47: handler->OnKeyDown(0x13); break;
+	    case 0x48: handler->OnKeyDown(0x91); break;
 	    case 0x49: handler->OnKeyDown('9'); break;
 	    case 0x4A: handler->OnKeyDown('-'); break;
-	    case 0x4B: handler->OnKeyDown('4'); break;
+	    case 0x4B: handler->OnKeyDown(0x9D); break;
 	    case 0x4C: handler->OnKeyDown('5'); break;
-	    case 0x4D: handler->OnKeyDown('6'); break;
+	    case 0x4D: handler->OnKeyDown(0x1D); break;
 	    case 0x4E: handler->OnKeyDown('+'); break;
 	    case 0x4F: handler->OnKeyDown('1'); break;
-	    case 0x50: handler->OnKeyDown('2'); break;
+	    case 0x50: handler->OnKeyDown(0x11); break;
 	    case 0x51: handler->OnKeyDown('3'); break;
 	    case 0x52: handler->OnKeyDown('0'); break;
 	    case 0x53: handler->OnKeyDown('.'); break;
