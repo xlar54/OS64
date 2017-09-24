@@ -23,6 +23,8 @@
 #include <c64/cpu.h>
 #include <c64/memory.h>
 
+#define _NO_BORDER_
+
 /**
  * @brief MOS Video Interface Chip II (VIC-II)
  *
@@ -111,13 +113,25 @@ class Vic
     /* constants */
     static const int kScreenLines = 312;
     static const int kScreenCols  = 504;
-    static const int kVisibleScreenWidth  = 320; //403;
-    static const int kVisibleScreenHeight = 200; //284;
-    static const int kFirstVisibleLine = 0; //14;
-    static const int kLastVisibleLine = 200; //298;
+
+#ifdef _NO_BORDER_
+    static const int kVisibleScreenWidth  = 320;
+    static const int kVisibleScreenHeight = 200;
+    static const int kFirstVisibleLine = 0;
+    static const int kLastVisibleLine = 200;
     static const int kLineCycles = 63;
-    static const int kBadLineCycles = 0; //23;
+    static const int kBadLineCycles = 0;
     static const double kRefreshRate = 1 / 50.125; // ~50Hz (PAL)
+#else
+    static const int kVisibleScreenWidth  = 403;
+    static const int kVisibleScreenHeight = 284;
+    static const int kFirstVisibleLine = 14;
+    static const int kLastVisibleLine = 298;
+    static const int kLineCycles = 63;
+    static const int kBadLineCycles = 23;
+    static const double kRefreshRate = 1 / 50.125; // ~50Hz (PAL)
+#endif
+
     static const int kSpritePtrsOffset = 0x3f8;
     /* graphic modes */
     enum kGraphicMode
@@ -135,9 +149,17 @@ class Vic
     static const int kGResY = 200;
     static const int kGCols = 40;
     static const int kGRows = 25;
-    static const int kGFirstLine = 0; //56;
-    static const int kGLastLine  = 200; //256;
-    static const int kGFirstCol  = 0; //42;
+
+#ifdef _NO_BORDER_
+    static const int kGFirstLine = 0;
+    static const int kGLastLine  = 200;
+    static const int kGFirstCol  = 0;
+#else
+    static const int kGFirstLine = 56;
+    static const int kGLastLine  = 256;
+    static const int kGFirstCol  = 42;
+#endif
+    
     /* sprites */
     static const int kSpriteWidth = 24;
     static const int kSpriteHeight = 21;

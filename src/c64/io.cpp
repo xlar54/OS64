@@ -62,22 +62,23 @@ void IO::init_keyboard()
 
 void IO::init_color_palette()
 {
-  outb(0x03c8, 0); outb(0x03c9, 0x00); outb(0x03c9, 0x00); outb(0x03c9, 0x00);  // black
-  outb(0x03c8, 1); outb(0x03c9, 0xff); outb(0x03c9, 0xff); outb(0x03c9, 0xff);  // white
-  outb(0x03c8, 2); outb(0x03c9, 0xff); outb(0x03c9, 0x00); outb(0x03c9, 0x00);  // red
-  outb(0x03c8, 3); outb(0x03c9, 0x00); outb(0x03c9, 0xff); outb(0x03c9, 0xff);  // cyan
-  outb(0x03c8, 4); outb(0x03c9, 0xff); outb(0x03c9, 0x00); outb(0x03c9, 0xff);  // violet
-  outb(0x03c8, 5); outb(0x03c9, 0x00); outb(0x03c9, 0xff); outb(0x03c9, 0x00);  // green
-  outb(0x03c8, 6); outb(0x03c9, 0x00); outb(0x03c9, 0x00); outb(0x03c9, 0xff);  // blue
-  outb(0x03c8, 7); outb(0x03c9, 0xff); outb(0x03c9, 0xff); outb(0x03c9, 0x00);  // yellow
-  outb(0x03c8, 8); outb(0x03c9, 0xff); outb(0x03c9, 0x67); outb(0x03c9, 0x00);  // orange
-  outb(0x03c8, 9); outb(0x03c9, 0xa7); outb(0x03c9, 0x47); outb(0x03c9, 0x00);  // brown
-  outb(0x03c8, 10); outb(0x03c9, 0xff); outb(0x03c9, 0x82); outb(0x03c9, 0xA7); // Lightred
-  outb(0x03c8, 11); outb(0x03c9, 0x50); outb(0x03c9, 0x50); outb(0x03c9, 0x50); // Gray 1 (dark)
-  outb(0x03c8, 12); outb(0x03c9, 0xa8); outb(0x03c9, 0xa8); outb(0x03c9, 0xa8); // Gray 2 (med)
-  outb(0x03c8, 13); outb(0x03c9, 0x97); outb(0x03c9, 0xff); outb(0x03c9, 0x97); // Lightgreen
-  outb(0x03c8, 14); outb(0x03c9, 0x97); outb(0x03c9, 0x97); outb(0x03c9, 0xff); // Lightblue
-  outb(0x03c8, 15); outb(0x03c9, 0x70); outb(0x03c9, 0x70); outb(0x03c9, 0x70); // Gray 2 (light)
+  setColorVGA(0, 0, 0, 0);// black
+  setColorVGA(1,63,63,63);// white
+  setColorVGA(2,63, 0, 0);// red
+  setColorVGA(3, 0,63,63);// cyan
+  setColorVGA(4,63, 0,63);// violet
+  setColorVGA(5, 0,63, 0);// green
+  setColorVGA(6, 0, 0,63);// blue
+  setColorVGA(7,63,63, 0);// yellow
+  setColorVGA(8,63,36, 0);// orange
+  setColorVGA(9,50,20, 0);// brown
+  setColorVGA(10,63,40,50);// Lightred
+  setColorVGA(11,20,20,20);// Gray 1 (dark)
+  setColorVGA(12,30,30,30);// Gray 2 (med)
+  setColorVGA(13,20,63,20);// Lightgreen
+  setColorVGA(14,20,20,63);// Lightblue
+  setColorVGA(15,40,40,40);// Gray 2 (light)
+
 }
 
 // emulation /////////////////////////////////////////////////////////////////// 
@@ -147,20 +148,20 @@ void IO::type_character(char c)
 
 // screen handling /////////////////////////////////////////////////////////////
 
-void IO::screen_draw_rect(int x, int y, int n, uint8_t color)
-{
+//void IO::screen_update_pixel(int x, int y, int color)
+//{
+//  vga_put_pixel(x, y,color);
+//};
 
-  for(int i=0; i < n ; i++)
-  {
-    unsigned short offset = (y<<8) + (y<<6) + (x+i);
-    *((uint8_t*)(0xA0000 + offset)) = color;
-  }
-}
- 
-void IO::screen_draw_border(int y, int color)
-{
-  screen_draw_rect(0,y,cols_, color); //0x03);
-}
+//void IO::screen_draw_rect(int x, int y, int n, uint8_t color)
+//{
+//  vga_draw_rect(x, y, n, color);
+//}
+
+//void IO::screen_draw_border(int y, int color)
+//{
+//  vga_draw_rect(0, y, cols_, color);
+//}
 
 
 void IO::screen_refresh()
@@ -179,5 +180,7 @@ void IO::vsync()
     // wait until done refreshing */
     //while (!(inb(0x03da) & 0x08)) {};
 }
+
+
 
 

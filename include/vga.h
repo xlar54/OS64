@@ -4,32 +4,19 @@
 
 #include <common/types.h>
 
-// 80x25 text mode
-// Not really needed, but maybe it can be used for a background ML monitor
-// or other log / debugging info
-
 #define	VGA_AC_INDEX		0x3C0
-#define	VGA_AC_WRITE		0x3C0
 #define	VGA_AC_READ		0x3C1
 #define	VGA_MISC_WRITE		0x3C2
-#define VGA_SEQ_INDEX		0x3C4
-#define VGA_SEQ_REG            0x3C4
-
+#define VGA_SEQ_REG		0x3C4
 #define VGA_SEQ_DATA		0x3C5
 #define	VGA_DAC_READ_INDEX	0x3C7
 #define	VGA_DAC_WRITE_INDEX	0x3C8
 #define	VGA_DAC_DATA		0x3C9
 #define	VGA_MISC_READ		0x3CC
-
 #define VGA_GC_INDEX 		0x3CE
-#define VGA_GFX_REG            0x3CE
-
 #define VGA_GC_DATA 		0x3CF
-/*			COLOR emulation		MONO emulation */
-#define VGA_CRTC_INDEX		0x3D4		/* 0x3B4 */
-#define VGA_CRT_REG            0x3D4
-
-#define VGA_CRTC_DATA		0x3D5		/* 0x3B5 */
+#define VGA_CRTC_INDEX		0x3D4 // COLOR emulation.  MONO = 0x3B4
+#define VGA_CRTC_DATA		0x3D5 // COLOR emulation.  MONO = 0x3B5
 #define	VGA_INSTAT_READ		0x3DA
 
 #define	VGA_NUM_SEQ_REGS	5
@@ -39,23 +26,18 @@
 #define	VGA_NUM_REGS		(1 + VGA_NUM_SEQ_REGS + VGA_NUM_CRTC_REGS + \
 				VGA_NUM_GC_REGS + VGA_NUM_AC_REGS)
 
-
-
-
-
-
-#define VGA_GFX_I_RESET         0x00
-#define VGA_GFX_I_ENABLE      0x01
-#define VGA_GFX_I_COLORCMP      0x02
-#define VGA_GFX_I_ROTATE      0x03
+#define VGA_GFX_I_RESET        0x00
+#define VGA_GFX_I_ENABLE       0x01
+#define VGA_GFX_I_COLORCMP     0x02
+#define VGA_GFX_I_ROTATE       0x03
 #define VGA_GFX_I_READMAP      0x04
 #define VGA_GFX_I_MODE         0x05
 #define VGA_GFX_I_MISC         0x06
 #define VGA_GFX_I_CNOCARE      0x07
 #define VGA_GFX_I_BITMASK      0x08
 
-#define VGA_SEQ_I_RESET         0x00
-#define VGA_SEQ_I_CLOCK         0x01
+#define VGA_SEQ_I_RESET        0x00
+#define VGA_SEQ_I_CLOCK        0x01
 #define VGA_SEQ_I_MAPMASK      0x02
 #define VGA_SEQ_I_CHARMAP      0x03
 #define VGA_SEQ_I_MEMMODE      0x04
@@ -65,7 +47,7 @@
 #define	pokew(S,O,V)		*(uint16_t *)(16uL * (S) + (O)) = (V)
 #define	vmemwr(DS,S,N)		memcpy((uint8_t *)(DS), S, N)
 
-static uint8_t* VideoMemory = (uint8_t*)0xb8000;
+static uint8_t* textVidRAM = (uint8_t*)0xb8000;
 
 // ---------------------- Gfx mode registers
 /*****************************************************************************
@@ -848,17 +830,25 @@ uint8_t readRegVGA(unsigned short reg, uint8_t idx);
 void writeRegVGA(uint16_t reg, uint8_t idx, uint8_t val);
 void write_regs(unsigned char *regs);
 void read_regs(unsigned char *regs);
+static unsigned get_fb_seg(void);
+int abs (int n);
+int sgn(int v);
+void vga_clear(int color);
+void vga_put_pixel(int x, int y, int color);
+void vga_draw_rect(int x, int y, int n, uint8_t color);
+void vga_draw_line(int x1, int y1, int x2, int y2, uint8_t color);
+
 void setTextModeVGA(int hi_res);
 void setFontVGA(const uint8_t * buffer, int h);
-void* memcpy(uint8_t* destination, const uint8_t* source, size_t num);
+void* memcpy(uint16_t* destination, const uint16_t* source, size_t num);
+void setColorVGA(int colorIndex, int red, int green, int blue);
+void putc(unsigned char c, int x, int y);
 void printf(char* str);
+void vga_update_cursor();
 void clear();
 void printfHex(uint8_t key);
 void printfHex16(uint16_t key);
 void printfHex32(uint32_t key);
-static unsigned get_fb_seg(void);
-static void write_font(unsigned char *buf, unsigned font_height);
-void setPlaneVGA(unsigned p);
 
 
 #endif

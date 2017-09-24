@@ -2,6 +2,7 @@
 #define EMUDORE_IO_H
 
 #include <common/types.h>
+#include <vga.h>
 #include <c64/cpu.h>
 
 /**
@@ -47,19 +48,19 @@ class IO
     void handle_keyup();
     void type_character(char c);
     inline uint8_t keyboard_matrix_row(int col){return keyboard_matrix_[col];};
-    void screen_update_pixel(int x, int y, int color);
-    void screen_draw_rect(int x, int y, int n, uint8_t color);
-    void screen_draw_border(int y, int color);
+    inline void screen_update_pixel(int x, int y, int color) { vga_put_pixel(x, y,color); };
+    inline void screen_draw_rect(int x, int y, int n, uint8_t color) { vga_draw_rect(x, y, n, color); };
+    inline void screen_draw_border(int y, int color) { vga_draw_rect(0, y, cols_, color); };
     void screen_refresh();
 };
 
 // inline member functions accesible from other classes /////////////////////
 
-inline void IO::screen_update_pixel(int x, int y, int color)
-{
-  unsigned short offset = (y<<8) + (y<<6) + x;
-  *((uint8_t*)(0xA0000 + offset)) = color;
-  
-};
+//inline void IO::screen_update_pixel(int x, int y, int color)
+//{
+//  unsigned short offset = (y<<8) + (y<<6) + x;
+//  *((uint8_t*)(0xA0000 + offset)) = color;
+//  
+//};
 
 #endif

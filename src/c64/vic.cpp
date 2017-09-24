@@ -16,7 +16,6 @@
  */
 
 #include <c64/vic.h>
-//#include <c64/util.h>
 
 // ctor and emulate()  ///////////////////////////////////////////////////////
 
@@ -79,7 +78,9 @@ bool Vic::emulate()
     {
       // draw border
       int screen_y = rstr - kFirstVisibleLine;
-      /*io_->screen_draw_border(screen_y,border_color_);*/
+#ifndef _NO_BORDER_
+      io_->screen_draw_border(screen_y,border_color_);
+#endif
       // draw raster on current graphic mode
       switch(graphic_mode_)
       {

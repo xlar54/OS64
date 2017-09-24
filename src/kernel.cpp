@@ -25,17 +25,17 @@ class IOKeyboardEventHandler : public KeyboardEventHandler
 {
 private:
   uint8_t shift = 0;
+  uint8_t mode = 0;
 public:
     void OnKeyDown(uint8_t c)
     {
-        //char* foo = " ";
-        //foo[0] = c;
-        //printf(foo);
+        char* foo = " ";
+        foo[0] = c;
+        printf(foo);
 
 	// PC keycode to petscii translation.  We are just injecting to the keyboard buffer for now.
 	switch(c)
 	{
-	  case 0x01: { c = 0x03; break; } // RUNSTOP
 	  case '1' : { if (shift == 1) c = 0x21; break; } // (
 	  case '2' : { if (shift == 1) c = 0x40; break; } // (
 	  case '3' : { if (shift == 1) c = 0x23; break; } // (
@@ -67,9 +67,23 @@ public:
 	  
 	  case 0x2A: { c = 0x00; shift=1; break; }
 	  	  
-	  // doesnt work and its making me nuts.
-	  // Scroll lock key to switch back to text mode
-	  //case 0x46: { setTextModeVGA(0); printf("hello"); return; } 
+	  // ESC key will toggle between text mode and emulation
+	  case 0x01: { 
+	    
+	    if (mode == 0)
+	    {
+	      setTextModeVGA(0);
+	      printf("Emudore 64 - Options:\n");
+	      printf("====================================================\n");
+	      mode = 1;
+	    }
+	    else
+	    {
+	      write_regs(g_320x200x256);
+	      c64ptr->io_->init_color_palette();
+	      mode = 0;
+	    }
+	    return; } 
 	  
 	}
 	if(c != 0x00)
@@ -141,12 +155,13 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     PeripheralComponentInterconnectController PCIController;
     PCIController.SelectDrivers(&drvManager, &interrupts);
     drvManager.ActivateAll();
-    
+       
     printf("Initializing interrupts..........[OK]\n");
     interrupts.Activate();
-    
+       
     printf("Starting Emulation...............[OK]\n");
 
+   
     C64 c64;
     c64ptr = &c64;
     c64.start();

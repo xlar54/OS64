@@ -30,14 +30,16 @@ All credit for emulation to Mario Ballano.  I just stuck stuff together to see i
 TO DO:
  * Proper keycode scanning - right now we are just injecting into the keyboard buffer
  * IO to load and save - this will undoubtbly be the biggest area of work
- * I'd like to include a monitor on the VGA 80x25 text mode screen as well
+ * I'd like to include a monitor on the VGA 80x25 text mode screen as well (ESC key)
  * Scaling so that the border can be rendered. Right now the code works at 320x200 disallowing the border
  * Take advantage of the multitasking and other low level OS features to provide new & interesting capabilties
  * Continue to work with the emudore team to improve emulation
  
-
 Code compiles for an x86 system using gcc 4.8.4. 
 
 9/21/17: Fixed some keyboard codes so that double quotes, home, and backspace work
 
 9/23/17: Fixed color palette & more keycodes
+
+9/24/17: Text mode screen can now be activated by pressing ESC key.  Will later use this for an ML monitor
+         and other functions like loading D64 images, etc.
