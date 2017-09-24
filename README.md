@@ -1,21 +1,20 @@
 # emudore64
 Commodore 64 native emulator for the x86 PC
 
-This is an C64 emulator that I stripped down to run bare metal on a PC.  The core OS came
+This is a C64 emulator that I stripped down to run bare metal on a PC.  The core OS came
 from another source.
 
 Turn your blazing fast PC into a Commodore 64 by booting up with a CD-ROM.
 Why?  Well, why not.  We have android running on everything, so why not a C64?
 
-There is so much wrong with this code that it isnt even funny.  But it works as a proof
-of concept.  I desperately need help to get this working as a full operating system. If
+There is so much wrong with this code that it isn't even funny.  But it works as a proof
+of concept.  I would very much like to see this as a fully operational OS. If
 you are good at emulation, C++, and OS development, please take a look.
 
 As a working demo, just burn the iso to a CD-ROM, and boot it up.  You should quickly
-be seeing the ol' C64 screen.  Left Shift is mapped to the quotation mark so you can
-play around with basic.  Colors are completely fabricated and do not work.  No real effort
-at a proper keyboard matrix - im just writing directly to the keyboard buffer.  Timing is terrible.
-You cant load/save (but there is code to talk to a harddrive). Its all a 
+be seeing the ol' C64 screen.  Colors are completely fabricated and do not work.  No real effort
+at a proper keyboard matrix - I'm just writing directly to the keyboard buffer.  Timing is terrible.
+You can't load/save (but there is code to talk to a harddrive). It's all a 
 big hack really.  But a lot of fun.
 
 The OS portion was from the video series: 
@@ -26,8 +25,8 @@ https://github.com/marioballano/emudore
 
 All credit for emulation to Mario Ballano.  I just stuck stuff together to see if it would work.
 
+=======
 Code compiles for an x86 system using gcc 4.8.4. 
 
 9/21/17: Fixed some keyboard codes so that double quotes, home, and backspace work
 9/23/17: Fixed color palette & more keycodes
-
