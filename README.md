@@ -11,13 +11,6 @@ There is so much wrong with this code that it isnt even funny.  But it works as 
 of concept.  I desperately need help to get this working as a full operating system. If
 you are good at emulation, C++, and OS development, please take a look.
 
-As a working demo, just burn the iso to a CD-ROM, and boot it up.  You should quickly
-be seeing the ol' C64 screen.  Left Shift is mapped to the quotation mark so you can
-play around with basic.  Colors are completely fabricated and do not work.  No real effort
-at a proper keyboard matrix - im just writing directly to the keyboard buffer.  Timing is terrible.
-You cant load/save (but there is code to talk to a harddrive). Its all a 
-big hack really.  But a lot of fun.
-
 The OS portion was from the video series: 
 https://www.youtube.com/watch?v=1rnA6wpF0o4&list=PLHh55M_Kq4OApWScZyPl5HhgsTJS9MZ6M&index=1
 
@@ -26,8 +19,17 @@ https://github.com/marioballano/emudore
 
 All credit for emulation to Mario Ballano.  I just stuck stuff together to see if it would work.
 
+TO DO:
+ * Proper keycode scanning - right now we are just injecting into the keyboard buffer
+ * IO to load and save - this will undoubtbly be the biggest area of work
+ * I'd like to include a monitor on the VGA 80x25 text mode screen as well
+ * Scaling so that the border can be rendered. Right now the code works at 320x200 disallowing the border
+ * Take advantage of the multitasking and other low level OS features to provide new & interesting capabilties
+ * Continue to work with the emudore team to improve emulation
+ 
 Code compiles for an x86 system using gcc 4.8.4. 
 
 9/21/17: Fixed some keyboard codes so that double quotes, home, and backspace work
+
 9/23/17: Fixed color palette & more keycodes
 
