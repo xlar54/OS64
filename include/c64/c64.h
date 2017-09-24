@@ -44,11 +44,12 @@ class C64
     Cia2 *cia2_;
     Vic *vic_;
     Sid *sid_;
-    IO *io_;
+    
     //std::function<bool()> callback_;
 
   public:
     Memory *mem_;
+    IO *io_;
     C64();
     ~C64();
     void start();

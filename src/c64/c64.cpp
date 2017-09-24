@@ -15,16 +15,11 @@
  * limitations under the License.
  */
 #include <c64/c64.h>
-//#include <c64/util.h>
-
-using namespace myos::drivers;
-
-VideoGraphicsArray vga;
 
 C64::C64()
 {
   
-  io_   = new IO(&vga);
+  io_   = new IO();
     
   /* create chips */
   cpu_  = new Cpu();

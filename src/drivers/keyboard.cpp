@@ -17,14 +17,10 @@ void KeyboardEventHandler::OnKeyUp(uint8_t)
 {
 }
 
-
-
-
-
 KeyboardDriver::KeyboardDriver(InterruptManager* manager, KeyboardEventHandler *handler)
 : InterruptHandler(manager, 0x21),
-dataport(0x60),
-commandport(0x64)
+  dataport(0x60),
+  commandport(0x64)
 {
     this->handler = handler;
 }
@@ -33,8 +29,8 @@ KeyboardDriver::~KeyboardDriver()
 {
 }
 
-void printf(char*);
-void printfHex(uint8_t);
+//void printf(char*);
+//void printfHex(uint8_t);
 
 void KeyboardDriver::Activate()
 {
@@ -57,7 +53,8 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
     if(handler == 0)
         return esp;
     
-    if (key == 0xAA)
+    // Treat left and right shift as same
+    if (key == 0xAA | key == 0xB6)
     {
       handler->OnKeyUp(0xAA);
     }
@@ -82,6 +79,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
     {
         switch(key)
         {
+	    case 0x01: handler->OnKeyDown(0x01); break; // ESC
             case 0x02: handler->OnKeyDown('1'); break;
             case 0x03: handler->OnKeyDown('2'); break;
             case 0x04: handler->OnKeyDown('3'); break;
@@ -94,7 +92,8 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
             case 0x0B: handler->OnKeyDown('0'); break;
 	    case 0x0C: handler->OnKeyDown('-'); break;
 	    case 0x0D: handler->OnKeyDown('='); break;
-	    case 0x0E: handler->OnKeyDown(0x08); break; // Backspace
+	    case 0x0E: handler->OnKeyDown(0x0E); break; // Backspace
+	    case 0x0F: handler->OnKeyDown(0x0F); break; // Tab
             case 0x10: handler->OnKeyDown('Q'); break;
             case 0x11: handler->OnKeyDown('W'); break;
             case 0x12: handler->OnKeyDown('E'); break;
@@ -132,46 +131,46 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
             case 0x32: handler->OnKeyDown('M'); break;
             case 0x33: handler->OnKeyDown(','); break;
             case 0x34: handler->OnKeyDown('.'); break;
-            case 0x35: handler->OnKeyDown('-'); break;
+            case 0x35: handler->OnKeyDown('/'); break;
 	    case 0x36: handler->OnKeyDown(0x2A); break; // RIGHTSHIFT (just sending the same as left for now)
 	    case 0x37: handler->OnKeyDown('*'); break;
 	    //case 0x38: handler->OnKeyDown(LEFTALT); break;
             case 0x39: handler->OnKeyDown(' '); break;
 	    //case 0x3A: handler->OnKeyDown(CAPSLOCK); break;
-	    //case 0x3B: handler->OnKeyDown(F1); break;
-	    //case 0x3C: handler->OnKeyDown(F2); break;
-	    //case 0x3D: handler->OnKeyDown(F3); break;
-	    //case 0x3E: handler->OnKeyDown(F4); break;
-	    //case 0x3F: handler->OnKeyDown(F5); break;
-	    //case 0x40: handler->OnKeyDown(F6); break;
-	    //case 0x41: handler->OnKeyDown(F7); break;
-	    //case 0x42: handler->OnKeyDown(F8); break;
-	    //case 0x43: handler->OnKeyDown(F9); break;
-	    //case 0x44: handler->OnKeyDown(F10); break;
+	    case 0x3B: handler->OnKeyDown(0x3B); break; //F1
+	    case 0x3C: handler->OnKeyDown(0x3C); break; //F2
+	    case 0x3D: handler->OnKeyDown(0x3D); break; //F3
+	    case 0x3E: handler->OnKeyDown(0x3E); break; //F4
+	    case 0x3F: handler->OnKeyDown(0x3F); break; //F5
+	    case 0x40: handler->OnKeyDown(0x40); break; //F6
+	    case 0x41: handler->OnKeyDown(0x41); break; //F7
+	    case 0x42: handler->OnKeyDown(0x42); break; //F8
+	    case 0x43: handler->OnKeyDown(0x43); break; //F9
+	    case 0x44: handler->OnKeyDown(0x44); break; //F10
 	    //case 0x45: handler->OnKeyDown(NUMLOCK); break;
-	    //case 0x46: handler->OnKeyDown(SCROLLLOCK); break;
-	    case 0x47: handler->OnKeyDown(0x13); break;
-	    case 0x48: handler->OnKeyDown(0x91); break;
+	    case 0x46: handler->OnKeyDown(0x46); break; // SCROLL LOCK
+	    case 0x47: handler->OnKeyDown(0x47); break; // HOME
+	    case 0x48: handler->OnKeyDown(0x91); break; // 8 - up
 	    case 0x49: handler->OnKeyDown('9'); break;
 	    case 0x4A: handler->OnKeyDown('-'); break;
-	    case 0x4B: handler->OnKeyDown(0x9D); break;
+	    case 0x4B: handler->OnKeyDown(0x9D); break; // 4 - left
 	    case 0x4C: handler->OnKeyDown('5'); break;
-	    case 0x4D: handler->OnKeyDown(0x1D); break;
+	    case 0x4D: handler->OnKeyDown(0x1D); break; // 6 - right
 	    case 0x4E: handler->OnKeyDown('+'); break;
 	    case 0x4F: handler->OnKeyDown('1'); break;
-	    case 0x50: handler->OnKeyDown(0x11); break;
+	    case 0x50: handler->OnKeyDown(0x11); break; // 2 - down
 	    case 0x51: handler->OnKeyDown('3'); break;
 	    case 0x52: handler->OnKeyDown('0'); break;
 	    case 0x53: handler->OnKeyDown('.'); break;
 	    //case 0x57: handler->OnKeyDown(F11); break;
 	    //case 0x58: handler->OnKeyDown(F12); break;
 
-            default:
+            /*default:
             {
                 printf("KEYBOARD 0x");
                 printfHex(key);
                 break;
-            }
+            }*/
         }
     }
     

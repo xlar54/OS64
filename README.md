@@ -25,4 +25,8 @@ https://github.com/marioballano/emudore
 
 All credit for emulation to Mario Ballano.  I just stuck stuff together to see if it would work.
 
+=======
+Code compiles for an x86 system using gcc 4.8.4. 
+
 9/21/17: Fixed some keyboard codes so that double quotes, home, and backspace work
+9/23/17: Fixed color palette & more keycodes
