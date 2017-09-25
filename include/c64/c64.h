@@ -28,6 +28,7 @@
 #include <c64/vic.h>
 //#include <c64/sid.h>
 #include <c64/io.h>
+#include <c64/monitor.h>
 
 
 /**
@@ -49,6 +50,7 @@ class C64
 
   public:
     Memory *mem_;
+    Monitor *mon_;
     IO *io_;
     C64();
     ~C64();
@@ -58,6 +60,7 @@ class C64
     Cpu * cpu(){return cpu_;};
     Memory * memory(){return mem_;};
     IO * io(){return io_;};
+    Monitor* monitor(){return mon_;};
 };
 
 #endif

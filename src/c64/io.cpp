@@ -17,7 +17,7 @@
 
 #include <c64/io.h>
 #include <c64/vic.h>
-#include <vga.h>
+#include <lib/vga.h>
 
 // clas ctor and dtor //////////////////////////////////////////////////////////
 
@@ -96,39 +96,55 @@ void IO::process_events()
 // keyboard handling /////////////////////////////////////////////////////////// 
 
 void IO::OnKeyDown(uint8_t c)
-{/*
-    //char* foo = " ";
-    //foo[0] = c;
-    //printf(foo);
+{
+	// PC keycode to petscii translation.  We are just injecting to the keyboard buffer for now.
+	switch(c)
+	{
+	  case '1' : { if (shift == 1) c = 0x21; break; } // (
+	  case '2' : { if (shift == 1) c = 0x40; break; } // (
+	  case '3' : { if (shift == 1) c = 0x23; break; } // (
+	  case '4' : { if (shift == 1) c = 0x24; break; } // (
+	  case '5' : { if (shift == 1) c = 0x25; break; } // (
+	  case '6' : { if (shift == 1) c = 0x20; break; } // (
+	  case '7' : { if (shift == 1) c = 0x26; break; } // (
+	  case '8' : { if (shift == 1) c = 0x2A; break; } // (
+	  case '9' : { if (shift == 1) c = 0x28; break; } // (
+	  case '0' : { if (shift == 1) c = 0x29; break; } // )
+	  case ',' : { if (shift == 1) c = 0x3C; break; } // )
+	  case '.' : { if (shift == 1) c = 0x3E; break; } // )
+	  case ';' : { if (shift == 1) c = 0x3A; break; } // )
+	  case '/' : { if (shift == 1) c = 0x3F; else c= 0x2F; break; } // )
+	  case '\'': { if (shift == 1) c = 0x22; break; } // Double Quote
+	  case 0x0E: { c = 0x14; break; } // Backspace
+	  case 0x0A: { c = 0x0D; break; } // Return
+	  case '=':  { if (shift == 1) c = 0x2B; else c= 0x3D; break; } // )
+	  //case 0x3B: { c = 0x85; break; } // F1
+	  /*case 0x3C: { c = 0x89; break; } // F2
+	  case 0x3D: { c = 0x86; break; } // F3
+	  case 0x3E: { c = 0x8A; break; } // F4
+	  case 0x3F: { c = 0x87; break; } // F5
+	  case 0x40: { c = 0x86; break; } // F6
+	  case 0x41: { c = 0x8B; break; } // F7
+	  case 0x42: { c = 0x8C; break; } // F8*/
 
-    // PC keycode to petscii translation.  We are just injecting to the keyboard buffer for now.
-    switch(c)
-    {
-      case '9' : { if (leftShift == 1) c = 0x28; break; } // (
-      case '0' : { if (leftShift == 1) c = 0x29; break; } // )
-      case '\'': { if (leftShift == 1) c = 0x22; break; } // Double Quote
-      case 0x08: { c = 0x14; break; } // Backspace
-      case 0x0A: { c = 0x0D; break; } // Return
-      case 0x2A: { leftShift = 1; return; }
-      
-      // doesnt work and its making me nuts.
-      // Scroll lock key to switch back to text mode
-      case 0x46: { setTextModeVGA(0); printf("hello"); return; } 
-      
-    }
-    
-    c64ptr->mem_->write_byte(631,c);
-    c64ptr->mem_->write_byte(198,1);
-    
-*/
+	  case 0x13: { if (shift == 1) c = 0x93; else c= 0x13; break; } // home / clr home
+	  
+	  case 0x2A: { c = 0x00; shift=1; break; }
+	  	  
+
+	  
+	}
+	if(c != 0x00)
+	{
+	  mem_->write_byte(631,c);
+	  mem_->write_byte(198,1);
+	}
 }
     
 void IO::OnKeyUp(uint8_t c)
 {
-  if(c == 0xaa)
-  {
-    leftShift = 0;
-  }
+      if(c == 0xaa)
+	shift = 0;
 }
 
 void IO::handle_keydown()

@@ -1,6 +1,6 @@
 
 #include <common/types.h>
-#include <vga.h>
+#include <lib/vga.h>
 #include <gdt.h>
 #include <memorymanagement.h>
 #include <hardwarecommunication/interrupts.h>
@@ -18,85 +18,56 @@ using namespace myos;
 using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
 
-C64* c64ptr;
-
+// for accessing and sending keyboard or 
+// other external data to c64's IO system
+C64* c64ptr;	
 
 class IOKeyboardEventHandler : public KeyboardEventHandler
 {
 private:
-  uint8_t shift = 0;
-  uint8_t mode = 0;
+  uint8_t mode = 0;  // 0 = emulation, 1 = terminal
 public:
     void OnKeyDown(uint8_t c)
     {
-        char* foo = " ";
-        foo[0] = c;
-        printf(foo);
-
-	// PC keycode to petscii translation.  We are just injecting to the keyboard buffer for now.
-	switch(c)
-	{
-	  case '1' : { if (shift == 1) c = 0x21; break; } // (
-	  case '2' : { if (shift == 1) c = 0x40; break; } // (
-	  case '3' : { if (shift == 1) c = 0x23; break; } // (
-	  case '4' : { if (shift == 1) c = 0x24; break; } // (
-	  case '5' : { if (shift == 1) c = 0x25; break; } // (
-	  case '6' : { if (shift == 1) c = 0x20; break; } // (
-	  case '7' : { if (shift == 1) c = 0x26; break; } // (
-	  case '8' : { if (shift == 1) c = 0x2A; break; } // (
-	  case '9' : { if (shift == 1) c = 0x28; break; } // (
-	  case '0' : { if (shift == 1) c = 0x29; break; } // )
-	  case ',' : { if (shift == 1) c = 0x3C; break; } // )
-	  case '.' : { if (shift == 1) c = 0x3E; break; } // )
-	  case ';' : { if (shift == 1) c = 0x3A; break; } // )
-	  case '/' : { if (shift == 1) c = 0x3F; else c= 0x2F; break; } // )
-	  case '\'': { if (shift == 1) c = 0x22; break; } // Double Quote
-	  case 0x0E: { c = 0x14; break; } // Backspace
-	  case 0x0A: { c = 0x0D; break; } // Return
-	  case '=':  { if (shift == 1) c = 0x2B; else c= 0x3D; break; } // )
-	  //case 0x3B: { c = 0x85; break; } // F1
-	  /*case 0x3C: { c = 0x89; break; } // F2
-	  case 0x3D: { c = 0x86; break; } // F3
-	  case 0x3E: { c = 0x8A; break; } // F4
-	  case 0x3F: { c = 0x87; break; } // F5
-	  case 0x40: { c = 0x86; break; } // F6
-	  case 0x41: { c = 0x8B; break; } // F7
-	  case 0x42: { c = 0x8C; break; } // F8*/
-
-	  case 0x13: { if (shift == 1) c = 0x93; else c= 0x13; break; } // home / clr home
-	  
-	  case 0x2A: { c = 0x00; shift=1; break; }
-	  	  
-	  // ESC key will toggle between text mode and emulation
-	  case 0x01: { 
-	    
-	    if (mode == 0)
-	    {
-	      setTextModeVGA(0);
-	      printf("Emudore 64 - Options:\n");
-	      printf("====================================================\n");
-	      mode = 1;
-	    }
-	    else
-	    {
-	      write_regs(g_320x200x256);
-	      c64ptr->io_->init_color_palette();
-	      mode = 0;
-	    }
-	    return; } 
-	  
+      // ESC key will toggle between text mode and emulation
+      if(c == 0x01) 
+      {
+	if (mode == 0) 
+	{ 
+	  mode = 1; 
+	  c64ptr->io_->mon_->Run();
+	  return;
 	}
-	if(c != 0x00)
-	{
-	  c64ptr->mem_->write_byte(631,c);
-	  c64ptr->mem_->write_byte(198,1);
+	else 
+	{ 
+	  mode = 0; 
+	  write_regs(g_320x200x256);
+	  c64ptr->io_->init_color_palette();
+	  return;
 	}
+      }
+      
+      switch(mode)
+      {
+	case 0:
+	  c64ptr->io_->OnKeyDown(c);
+	  break;
+	case 1:
+	  c64ptr->io_->mon_->OnKeyDown(c);
+	  break;
+      }
     }
     
     void OnKeyUp(uint8_t c)
     {
-      if(c == 0xaa)
-	shift = 0;
+      switch(mode)
+      {
+	case 0:
+	  c64ptr->io_->OnKeyUp(c);
+	  break;
+	case 1:
+	  break;
+      }
     }
 };
 

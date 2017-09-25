@@ -43,3 +43,5 @@ Code compiles for an x86 system using gcc 4.8.4.
 
 9/24/17: Text mode screen can now be activated by pressing ESC key.  Will later use this for an ML monitor
          and other functions like loading D64 images, etc.
+
+9/25/17: Keyboard code moved, start of ML monitor

@@ -18,16 +18,18 @@
 
 C64::C64()
 {
-  
-  io_   = new IO();
-    
   /* create chips */
+  io_   = new IO();
   cpu_  = new Cpu();
   mem_  = new Memory();
   cia1_ = new Cia1();
   cia2_ = new Cia2();
   vic_  = new Vic();
   //sid_  = new Sid();
+  
+  mon_ = new Monitor();
+  mon_->cpu(cpu_);
+  mon_->mem(mem_);
 
   /* init cpu */
   cpu_->memory(mem_);
@@ -43,6 +45,8 @@ C64::C64()
   cia2_->cpu(cpu_);
   /* init io */
   io_->cpu(cpu_);
+  io_->memory(mem_);
+  io_->monitor(mon_);
   /* DMA */
   mem_->vic(vic_);
   mem_->cia1(cia1_);

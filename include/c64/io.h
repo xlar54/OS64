@@ -2,8 +2,12 @@
 #define EMUDORE_IO_H
 
 #include <common/types.h>
-#include <vga.h>
+#include <lib/vga.h>
 #include <c64/cpu.h>
+#include <c64/memory.h>
+#include <c64/monitor.h>
+
+class Monitor;
 
 /**
  * @brief IO devices
@@ -15,6 +19,7 @@ class IO
 {
   private:
     Cpu *cpu_;
+    Memory *mem_;
     uint32_t *frame_;
     size_t cols_;
     size_t rows_;
@@ -27,7 +32,8 @@ class IO
       kPress,
       kRelease,
     };
-    uint8_t leftShift = 0;
+    uint8_t shift = 0;
+    uint8_t mode = 0;
 
     unsigned int next_key_event_at_;
     static const int kWait = 18000;
@@ -37,9 +43,12 @@ class IO
   public:
     IO();
     ~IO();
+    Monitor *mon_;
     bool emulate();
     void process_events();
     void cpu(Cpu *v){cpu_=v;};
+    void memory(Memory *m) {mem_ = m;};
+    void monitor(Monitor *m) {mon_ = m;};
     void init_color_palette();
     void init_keyboard();
     void OnKeyDown(uint8_t c);

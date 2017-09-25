@@ -4,9 +4,10 @@ ASPARAMS = --32
 LDPARAMS = -melf_i386
 
 objects = obj/loader.o \
-	  obj/vga.o \
+	  obj/memorymanagement.o \
+	  obj/lib/vga.o \
+	  obj/lib/string.o \
           obj/gdt.o \
-          obj/memorymanagement.o \
           obj/drivers/driver.o \
           obj/hardwarecommunication/port.o \
           obj/hardwarecommunication/interruptstubs.o \
@@ -24,6 +25,7 @@ objects = obj/loader.o \
           obj/c64/io.o \
           obj/c64/memory.o \
           obj/c64/vic.o \
+          obj/c64/monitor.o \
           obj/kernel.o
 
 
