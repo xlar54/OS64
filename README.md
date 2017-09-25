@@ -2,17 +2,20 @@
 Commodore 64 native emulator operating system for the x86 PC
 
 WHAT:
+
 This is a C64 emulator that I stripped down to run bare metal on a PC. Turn your blazing fast PC
 into a Commodore 64 by booting up via CD-ROM or flash drive. Why?  Well, why not?
 We have linux and android running on everything, so why not a C64?  We have taken a core OS, and mashed
 it up with a C64 emulator as the kernel.  
 
 STATUS:
+
 There is so much wrong with this code that it isn't even funny.  But it works as a proof
 of concept.  I would very much like to see this as a fully operational OS. If
 you are good at emulation, C++, and OS development, please take a look.
 
 DEMO:
+
 As a working demo, just burn the iso to a CD-ROM, and boot it up, or use something like rufus to convert
 to a bootable flash drive.  You should quickly be seeing the ol' C64 screen. You can't load/save (but there
 is code to eventually talk to a harddrive). It's all a big hack really, but has some potential.
@@ -32,6 +35,7 @@ BUILDING:
  * Will automatically initiate VirtualBox and start a VM called "emudore64" (see makefile)
 
 UPDATES:
+
 9/21/17: Fixed some keyboard codes so that double quotes, home, and backspace work
 
 9/23/17: Fixed color palette & more keycodes
