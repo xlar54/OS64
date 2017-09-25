@@ -76,7 +76,7 @@ void IO::init_color_palette()
   setColorVGA(11,20,20,20);// Gray 1 (dark)
   setColorVGA(12,30,30,30);// Gray 2 (med)
   setColorVGA(13,20,63,20);// Lightgreen
-  setColorVGA(14,20,20,63);// Lightblue
+  setColorVGA(14,30,30,63);// Lightblue
   setColorVGA(15,40,40,40);// Gray 2 (light)
 
 }

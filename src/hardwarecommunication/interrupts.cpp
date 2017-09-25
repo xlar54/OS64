@@ -170,8 +170,8 @@ uint32_t InterruptManager::DoHandleInterrupt(uint8_t interrupt, uint32_t esp)
     }
     else if(interrupt != hardwareInterruptOffset)
     {
-        printf("UNHANDLED INTERRUPT 0x");
-        printfHex(interrupt);
+      printf("UNHANDLED INTERRUPT 0x");
+      printfHex(interrupt);
     }
     
     if(interrupt == hardwareInterruptOffset)
