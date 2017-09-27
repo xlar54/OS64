@@ -47,8 +47,6 @@
 #define	pokew(S,O,V)		*(uint16_t *)(16uL * (S) + (O)) = (V)
 #define	vmemwr(DS,S,N)		memcpy((uint8_t *)(DS), S, N)
 
-static uint8_t* VideoMemory = (uint8_t*)0xb8000;
-
 // ---------------------- Gfx mode registers
 /*****************************************************************************
 VGA REGISTER DUMPS FOR VARIOUS GRAPHICS MODES
@@ -824,6 +822,9 @@ static unsigned char g_8x16_font[4096] =
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+static uint8_t* gfxVideoRAM = (uint8_t*)0xA0000;
+static uint16_t* txtVideoRAM = (uint16_t*)0xB8000;
+
 inline void outb(uint16_t port, uint8_t value);
 inline uint8_t inb(uint16_t port);
 uint8_t readRegVGA(unsigned short reg, uint8_t idx);
@@ -837,6 +838,7 @@ void vga_clear(int color);
 void vga_put_pixel(int x, int y, int color);
 void vga_draw_rect(int x, int y, int n, uint8_t color);
 void vga_draw_line(int x1, int y1, int x2, int y2, uint8_t color);
+void vga_set_color(int colorIndex, int red, int green, int blue);
 
 static uint8_t textCols=80, textRows=25;
 static uint8_t cursorX=0,cursorY=0;
@@ -846,10 +848,11 @@ static uint8_t vga_cursorOn=0;
 void setTextModeVGA(int hi_res);
 void setFontVGA(const uint8_t * buffer, int h);
 void* memcpy(uint16_t* destination, const uint16_t* source, size_t num);
-void setColorVGA(int colorIndex, int red, int green, int blue);
-void putc(unsigned char c, int x, int y);
+
+void putc(unsigned char);
 void printf(char* str);
 void vga_update_cursor();
+void vga_scroll();
 void clear();
 void printfHex(uint8_t key);
 void printfHex16(uint16_t key);

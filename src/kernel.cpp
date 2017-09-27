@@ -20,6 +20,7 @@ using namespace myos::hardwarecommunication;
 
 // for accessing and sending keyboard or 
 // other external data to c64's IO system
+
 C64* c64ptr;	
 
 class IOKeyboardEventHandler : public KeyboardEventHandler
@@ -129,10 +130,24 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
        
     printf("Initializing interrupts..........[OK]\n");
     interrupts.Activate();
-       
+    
+    // 0x1F0 = primary		interrupt 14
+    // 0x170 = secondary	interrupt 15
+    // 0x1E8 = third
+    // 0x168 = fourth
+    
+    printf("\nS-ATA primary master: ");
+    AdvancedTechnologyAttachment ata0m(true, 0x1F0);  
+    //ata0m.Identify();
+  
+    //ata0m.Write28(0, (uint8_t*)"Test", 11);
+    //ata0m.Flush();
+    //ata0m.Read28(0);
+    
     printf("Starting Emulation...............[OK]\n");
-
    
+    //while(1) {};
+    
     C64 c64;
     c64ptr = &c64;
     c64.start();

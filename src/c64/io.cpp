@@ -62,22 +62,22 @@ void IO::init_keyboard()
 
 void IO::init_color_palette()
 {
-  setColorVGA(0, 0, 0, 0);// black
-  setColorVGA(1,63,63,63);// white
-  setColorVGA(2,63, 0, 0);// red
-  setColorVGA(3, 0,63,63);// cyan
-  setColorVGA(4,63, 0,63);// violet
-  setColorVGA(5, 0,63, 0);// green
-  setColorVGA(6, 0, 0,63);// blue
-  setColorVGA(7,63,63, 0);// yellow
-  setColorVGA(8,63,36, 0);// orange
-  setColorVGA(9,50,20, 0);// brown
-  setColorVGA(10,63,40,50);// Lightred
-  setColorVGA(11,20,20,20);// Gray 1 (dark)
-  setColorVGA(12,30,30,30);// Gray 2 (med)
-  setColorVGA(13,20,63,20);// Lightgreen
-  setColorVGA(14,30,30,63);// Lightblue
-  setColorVGA(15,40,40,40);// Gray 2 (light)
+  vga_set_color(0, 0, 0, 0);// black
+  vga_set_color(1,63,63,63);// white
+  vga_set_color(2,63, 0, 0);// red
+  vga_set_color(3, 0,63,63);// cyan
+  vga_set_color(4,63, 0,63);// violet
+  vga_set_color(5, 0,63, 0);// green
+  vga_set_color(6, 0, 0,63);// blue
+  vga_set_color(7,63,63, 0);// yellow
+  vga_set_color(8,63,36, 0);// orange
+  vga_set_color(9,50,20, 0);// brown
+  vga_set_color(10,63,40,50);// Lightred
+  vga_set_color(11,20,20,20);// Gray 1 (dark)
+  vga_set_color(12,30,30,30);// Gray 2 (med)
+  vga_set_color(13,20,63,20);// Lightgreen
+  vga_set_color(14,30,30,63);// Lightblue
+  vga_set_color(15,40,40,40);// Gray 2 (light)
 
 }
 
