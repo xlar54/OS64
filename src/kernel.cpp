@@ -1,5 +1,5 @@
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <lib/vga.h>
 #include <gdt.h>
 #include <memorymanagement.h>

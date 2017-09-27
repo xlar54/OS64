@@ -1,7 +1,7 @@
 #ifndef EMUDORE_IO_H
 #define EMUDORE_IO_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <lib/vga.h>
 #include <c64/cpu.h>
 #include <c64/memory.h>

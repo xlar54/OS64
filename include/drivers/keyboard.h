@@ -2,7 +2,7 @@
 #ifndef __MYOS__DRIVERS__KEYBOARD_H
 #define __MYOS__DRIVERS__KEYBOARD_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <hardwarecommunication/interrupts.h>
 #include <drivers/driver.h>
 #include <hardwarecommunication/port.h>

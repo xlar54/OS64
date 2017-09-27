@@ -17,7 +17,6 @@
 #include <memorymanagement.h>
 #include <c64/c64rom.h>
 #include <c64/memory.h>
-//#include <c64/util.h>
 #include <c64/vic.h>
 #include <c64/cia1.h>
 #include <c64/cia2.h>

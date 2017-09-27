@@ -19,7 +19,7 @@
 #define EMUDORE_CPU_H
 
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <c64/memory.h>
 
 /**

@@ -2,7 +2,7 @@
 #ifndef __MYOS__HARDWARECOMMUNICATION__PORT_H
 #define __MYOS__HARDWARECOMMUNICATION__PORT_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 
 namespace myos
 {

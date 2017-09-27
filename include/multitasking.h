@@ -2,7 +2,7 @@
 #ifndef __MYOS__MULTITASKING_H
 #define __MYOS__MULTITASKING_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <gdt.h>
 
 namespace myos

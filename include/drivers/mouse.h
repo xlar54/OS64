@@ -2,7 +2,7 @@
 #ifndef __MYOS__DRIVERS__MOUSE_H
 #define __MYOS__DRIVERS__MOUSE_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <hardwarecommunication/port.h>
 #include <drivers/driver.h>
 #include <hardwarecommunication/interrupts.h>

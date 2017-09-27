@@ -4,7 +4,7 @@
 
 #include <hardwarecommunication/port.h>
 #include <drivers/driver.h>
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <hardwarecommunication/interrupts.h>
 
 #include <memorymanagement.h>

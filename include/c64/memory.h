@@ -18,7 +18,7 @@
 #ifndef EMUDORE_MEMORY_H
 #define EMUDORE_MEMORY_H 
 
-#include <common/types.h>
+#include <lib/stdint.h>
 
 /* forward declarations */
 

@@ -20,7 +20,7 @@
 
 #include <functional>
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <c64/cpu.h>
 #include <c64/memory.h>
 #include <c64/cia1.h>

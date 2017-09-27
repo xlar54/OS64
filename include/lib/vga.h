@@ -2,7 +2,7 @@
 #ifndef __EMUDORE64__VGA_H
 #define __EMUDORE64__VGA_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 
 #define	VGA_AC_INDEX		0x3C0
 #define	VGA_AC_READ		0x3C1

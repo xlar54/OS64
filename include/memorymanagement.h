@@ -2,7 +2,7 @@
 #ifndef __MYOS__MEMORYMANAGEMENT_H
 #define __MYOS__MEMORYMANAGEMENT_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 
 
 namespace myos

@@ -1,5 +1,5 @@
-#ifndef __MYOS__COMMON__TYPES_H
-#define __MYOS__COMMON__TYPES_H
+#ifndef __STDINT_H
+#define __STDINT_H
 
         typedef char                     int8_t;
         typedef unsigned char           uint8_t;

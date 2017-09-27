@@ -4,7 +4,7 @@
 
 #include <gdt.h>
 #include <multitasking.h>
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <hardwarecommunication/port.h>
 
 

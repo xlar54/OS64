@@ -17,7 +17,7 @@
 #ifndef EMUDORE_CIA2_H
 #define EMUDORE_CIA2_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <c64/io.h>
 #include <c64/cpu.h>
 

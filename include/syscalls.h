@@ -2,7 +2,7 @@
 #ifndef __MYOS__SYSCALLS_H
 #define __MYOS__SYSCALLS_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <hardwarecommunication/interrupts.h>
 #include <multitasking.h>
 

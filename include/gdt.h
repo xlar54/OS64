@@ -1,7 +1,7 @@
 #ifndef __MYOS__GDT_H
 #define __MYOS__GDT_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 
 namespace myos
 {

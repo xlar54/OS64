@@ -18,7 +18,7 @@
 #ifndef EMUDORE_VIC_H
 #define EMUDORE_VIC_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <c64/io.h>
 #include <c64/cpu.h>
 #include <c64/memory.h>

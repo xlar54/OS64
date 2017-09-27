@@ -2,7 +2,7 @@
 #ifndef __MYOS__DRIVERS__ATA_H
 #define __MYOS__DRIVERS__ATA_H
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <hardwarecommunication/interrupts.h>
 #include <hardwarecommunication/port.h>
 

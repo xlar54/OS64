@@ -1,7 +1,7 @@
 #ifndef EMUDORE_MONITOR_H
 #define EMUDORE_MONITOR_H 
 
-#include <common/types.h>
+#include <lib/stdint.h>
 #include <lib/string.h>
 #include <c64/io.h>
 #include <c64/cpu.h>
