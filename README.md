@@ -47,6 +47,8 @@ UPDATES:
 
 9/25/17: Keyboard code moved, start of ML monitor
 
+9/29/17: Prep work adding rudimentary FAT32 filesystem. Eventual capability to load/save
+
 CREDITS:
  * The OS portion was from the video series: https://www.youtube.com/watch?v=1rnA6wpF0o4&list=PLHh55M_Kq4OApWScZyPl5HhgsTJS9MZ6M&index=1
  * The emulator code is from: https://github.com/marioballano/emudore
