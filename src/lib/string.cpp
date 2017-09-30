@@ -98,3 +98,14 @@ void	memset( void *vd, char value, unsigned length )
 	}
 }
 
+void* memcpy(uint16_t* destination, const uint16_t* source, size_t num)
+{
+  int i;
+  uint16_t* d = destination;
+  const uint16_t* s = source;
+  for (i = 0; i < num; i++) {
+	  d[i] = s[i];
+  }
+  return destination;
+}
+

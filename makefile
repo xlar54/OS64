@@ -5,8 +5,10 @@ LDPARAMS = -melf_i386
 
 objects = obj/loader.o \
 	  obj/memorymanagement.o \
+	  obj/lib/stdio.o \
 	  obj/lib/vga.o \
 	  obj/lib/string.o \
+	  obj/lib/stdlib.o \
           obj/gdt.o \
           obj/drivers/driver.o \
           obj/hardwarecommunication/port.o \
@@ -18,6 +20,8 @@ objects = obj/loader.o \
           obj/drivers/keyboard.o \
           obj/drivers/mouse.o \
           obj/drivers/ata.o \
+          obj/filesystem/msdospart.o \
+          obj/filesystem/fat.o \
           obj/c64/c64.o \
           obj/c64/cia1.o \
           obj/c64/cia2.o \

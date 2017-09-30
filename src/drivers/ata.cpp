@@ -9,8 +9,6 @@ using namespace myos::drivers;
 // Sector is 512 bytes  - 512 x 2^28 = 4GB
 // CHS vs LBA address mode.  LBA is newer, doesnt require knowledge of drive geometry
 
-void printf(char* str);
-void printfHex(uint8_t);
 
 AdvancedTechnologyAttachment::AdvancedTechnologyAttachment(bool master, uint16_t portBase)
 :   dataPort(portBase),				// 16 bit port for data
@@ -76,14 +74,15 @@ void AdvancedTechnologyAttachment::Identify()
     printf("\n");
 }
 
-void AdvancedTechnologyAttachment::Read28(uint32_t sectorNum, int count)
+
+void AdvancedTechnologyAttachment::Read28(uint32_t sectorNum, uint8_t* sector, int count)
 {
-    if(sectorNum > 0x0FFFFFFF)
+  if(sectorNum > 0x0FFFFFFF)
         return;
     
     devicePort.Write( (master ? 0xE0 : 0xF0) | ((sectorNum & 0x0F000000) >> 24) );
     errorPort.Write(0);
-    sectorCountPort.Write(1);
+    sectorCountPort.Write(1);					// read one sector
     lbaLowPort.Write(  sectorNum & 0x000000FF );
     lbaMidPort.Write( (sectorNum & 0x0000FF00) >> 8);
     lbaHiPort.Write( (sectorNum & 0x00FF0000) >> 16 );
@@ -101,26 +100,17 @@ void AdvancedTechnologyAttachment::Read28(uint32_t sectorNum, int count)
         return;
     }
     
-    
-    printf("\n\nReading ATA Drive: ");
-    
-    for(int i = 0; i < count; i += 2)
+   
+    int ctr=0;
+    for(int i=0; i < 256; i++)
     {
-        uint16_t wdata = dataPort.Read();
-        
-        char *text = "  \0";
-        text[0] = wdata & 0xFF;
-        
-        if(i+1 < count)
-            text[1] = (wdata >> 8) & 0xFF;
-        else
-            text[1] = '\0';
-        
-        printf(text);
-    }    
-    
-    for(int i = count + (count%2); i < 512; i += 2)
-        dataPort.Read();
+	uint16_t wdata = dataPort.Read();
+	uint16_t swap = (wdata << 8) | ((wdata >> 8) & 0x00ff); // swap endianess
+	sector[ctr++] = (swap >> 8) & 0xFF;
+	sector[ctr++] = swap & 0xFF;
+    }
+    return;
+
 }
 
 void AdvancedTechnologyAttachment::Write28(uint32_t sectorNum, uint8_t* data, uint32_t count)

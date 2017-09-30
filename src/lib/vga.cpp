@@ -293,7 +293,7 @@ void setFontVGA(const uint8_t * buffer, int h)
 {
    unsigned char seq2, seq4, gfx6;
    int i, j;
-   unsigned char * mem;
+   uint8_t* mem;
 
    seq2 = readRegVGA(VGA_SEQ_REG, VGA_SEQ_I_MAPMASK);
    writeRegVGA(VGA_SEQ_REG, VGA_SEQ_I_MAPMASK, 0x04);
@@ -321,17 +321,8 @@ void setFontVGA(const uint8_t * buffer, int h)
 
    writeRegVGA(VGA_GC_INDEX, VGA_GFX_I_MODE, 0x10);
    writeRegVGA(VGA_GC_INDEX, VGA_GFX_I_BITMASK, 0xFF);
-}
+   
 
-void* memcpy(uint16_t* destination, const uint16_t* source, size_t num)
-{
-  int i;
-  uint16_t* d = destination;
-  const uint16_t* s = source;
-  for (i = 0; i < num; i++) {
-	  d[i] = s[i];
-  }
-  return destination;
 }
 
 void vga_set_color(int colorIndex, int red, int green, int blue)
@@ -341,68 +332,6 @@ void vga_set_color(int colorIndex, int red, int green, int blue)
   outb(0x3C9, red);
   outb(0x3C9, green);
   outb(0x3C9, blue);
-}
-
-void putc(unsigned char c)
-{
-  // The attribute byte is made up of two nibbles - the lower being the
-  // foreground colour, and the upper the background colour.
-  uint16_t attrib = (backColor << 4) | (foreColor & 0x0F);
-  volatile uint16_t *location;
-  location = txtVideoRAM + (cursorY * textCols + cursorX) ;
-  *location = c | (attrib << 8);
-}
-
-void printf(char* str)
-{
-    for(int i = 0; str[i] != '\0'; ++i)
-    {
-        switch(str[i])
-        {
-	  // backspace
-	  case 0x0E:
-	    if(cursorX > 0)
-	    {
-	      cursorX--;
-	      putc(' '); 
-	      vga_update_cursor();
-	      return;
-	    }
-	    else if(cursorX == 0 && cursorY>0)
-	    {
-	      cursorX = textCols-1;
-	      cursorY--;
-	      putc(' '); 
-	      vga_update_cursor();
-	      return;
-	    }
-	    else if(cursorX == 0 && cursorY==0)
-	      return;
-	    break;
-	  case 0x0F:
-	    cursorX = (cursorX + 8) & ~(8 - 1);
-	    vga_update_cursor();
-	    break;
-	  case '\n':
-	    cursorX = 0;
-	    cursorY++;
-	    break;
-	  default:
-	    putc(str[i]);  
-	    cursorX++;
-	    break;
-        }
-
-        if(cursorX >= textCols)
-        {
-            cursorX = 0;
-            cursorY++;
-        }
-
-        vga_scroll();
-        
-        vga_update_cursor();
-    }
 }
 
 void vga_scroll()
@@ -460,23 +389,69 @@ void clear()
   cursorX = 0; cursorY = 0;
 }
 
-void printfHex(uint8_t key)
+void puts(char* string)
 {
-    char* foo = "00";
-    char* hex = "0123456789ABCDEF";
-    foo[0] = hex[(key >> 4) & 0xF];
-    foo[1] = hex[key & 0xF];
-    printf(foo);
+  while(*string != '\0')
+  {
+    putc(*string);
+    string++;
+  }
 }
-void printfHex16(uint16_t key)
+
+void putc(uint8_t c)
 {
-    printfHex((key >> 8) & 0xFF);
-    printfHex( key & 0xFF);
-}
-void printfHex32(uint32_t key)
-{
-    printfHex((key >> 24) & 0xFF);
-    printfHex((key >> 16) & 0xFF);
-    printfHex((key >> 8) & 0xFF);
-    printfHex( key & 0xFF);
+  // The attribute byte is made up of two nibbles - the lower being the
+  // foreground colour, and the upper the background colour.
+  uint16_t attrib = (backColor << 4) | (foreColor & 0x0F);
+  uint16_t *location;
+   
+  
+  switch(c)
+  {
+    // backspace
+    case 0x0E:
+      if(cursorX > 0)
+      {
+	cursorX--;
+	location = txtVideoRAM + (cursorY * textCols + cursorX) ;
+	*location = ' ' | (attrib << 8);
+	vga_update_cursor();
+	return;
+      }
+      else if(cursorX == 0 && cursorY>0)
+      {
+	cursorX = textCols-1;
+	cursorY--;
+	location = txtVideoRAM + (cursorY * textCols + cursorX) ;
+	*location = ' ' | (attrib << 8); 
+	vga_update_cursor();
+	return;
+      }
+      else if(cursorX == 0 && cursorY==0)
+	return;
+      break;
+    case 0x0F:
+      cursorX = (cursorX + 8) & ~(8 - 1);
+      vga_update_cursor();
+      break;
+    case '\n':
+      cursorX = 0;
+      cursorY++;
+      break;
+    default:
+      location = txtVideoRAM + (cursorY * textCols + cursorX) ;
+      *location = c | (attrib << 8); 
+      cursorX++;
+      break;
+  }
+  
+  if(cursorX >= textCols)
+  {
+      cursorX = 0;
+      cursorY++;
+  }
+
+  vga_scroll();
+  
+  vga_update_cursor();
 }

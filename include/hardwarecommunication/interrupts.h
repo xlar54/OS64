@@ -5,6 +5,7 @@
 #include <gdt.h>
 #include <multitasking.h>
 #include <lib/stdint.h>
+#include <lib/stdio.h>
 #include <hardwarecommunication/port.h>
 
 

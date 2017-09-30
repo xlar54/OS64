@@ -77,27 +77,28 @@ void Monitor::prompt()
 
 void Monitor::process_cmd()
 {
+ 
   if(!strcmp(buf, "M 0400"))
   {
     printf("\n\n0400: "); 
     
-    printfHex(mem_->read_byte(1024));
+    printf("%02X", mem_->read_byte(1024));
     printf("-");
-    printfHex(mem_->read_byte(1025));
+    printf("%02X", mem_->read_byte(1025));
     printf("-");
-    printfHex(mem_->read_byte(1026));
+    printf("%02X", mem_->read_byte(1026));
     printf("-");
-    printfHex(mem_->read_byte(1027));
+    printf("%02X", mem_->read_byte(1027));
     printf("-");
-    printfHex(mem_->read_byte(1028));
+    printf("%02X", mem_->read_byte(1028));
     printf("-");
-    printfHex(mem_->read_byte(1029));
+    printf("%02X", mem_->read_byte(1029));
     printf("-");
-    printfHex(mem_->read_byte(1030));
+    printf("%02X", mem_->read_byte(1030));
     printf("-");
-    printfHex(mem_->read_byte(1031));
+    printf("%02X", mem_->read_byte(1031));
     printf("-");
-    printfHex(mem_->read_byte(1032));
+    printf("%02X", mem_->read_byte(1032));
     printf("-");
   }
 }

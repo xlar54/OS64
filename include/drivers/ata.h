@@ -3,6 +3,7 @@
 #define __MYOS__DRIVERS__ATA_H
 
 #include <lib/stdint.h>
+#include <lib/stdio.h>
 #include <hardwarecommunication/interrupts.h>
 #include <hardwarecommunication/port.h>
 
@@ -30,7 +31,7 @@ namespace myos
             ~AdvancedTechnologyAttachment();
             
             void Identify();
-            void Read28(uint32_t sectorNum, int count = 512);
+            void Read28(uint32_t sectorNum, uint8_t* sector, int count = 512);
             void Write28(uint32_t sectorNum, uint8_t* data, uint32_t count);
             void Flush();
             

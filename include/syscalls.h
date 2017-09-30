@@ -3,6 +3,7 @@
 #define __MYOS__SYSCALLS_H
 
 #include <lib/stdint.h>
+#include <lib/stdio.h>
 #include <hardwarecommunication/interrupts.h>
 #include <multitasking.h>
 

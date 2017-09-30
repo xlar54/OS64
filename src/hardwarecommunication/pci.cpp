@@ -62,55 +62,38 @@ bool PeripheralComponentInterconnectController::DeviceHasFunctions(uint16_t bus,
 }
 
 
-void printf(char* str);
-void printfHex(uint8_t);
-
 void PeripheralComponentInterconnectController::SelectDrivers(DriverManager* driverManager, myos::hardwarecommunication::InterruptManager* interrupts)
 {
-    for(int bus = 0; bus < 8; bus++)
+  for(int bus = 0; bus < 8; bus++)
+  {
+    for(int device = 0; device < 32; device++)
     {
-        for(int device = 0; device < 32; device++)
-        {
-            int numFunctions = DeviceHasFunctions(bus, device) ? 8 : 1;
-            for(int function = 0; function < numFunctions; function++)
-            {
-                PeripheralComponentInterconnectDeviceDescriptor dev = GetDeviceDescriptor(bus, device, function);
-                
-                if(dev.vendor_id == 0x0000 || dev.vendor_id == 0xFFFF)
-                    continue;
-                
-                
-                for(int barNum = 0; barNum < 6; barNum++)
-                {
-                    BaseAddressRegister bar = GetBaseAddressRegister(bus, device, function, barNum);
-                    if(bar.address && (bar.type == InputOutput))
-                        dev.portBase = (uint32_t)bar.address;
-                }
-                
-                Driver* driver = GetDriver(dev, interrupts);
-                if(driver != 0)
-                    driverManager->AddDriver(driver);
+      int numFunctions = DeviceHasFunctions(bus, device) ? 8 : 1;
+      for(int function = 0; function < numFunctions; function++)
+      {
+	PeripheralComponentInterconnectDeviceDescriptor dev = GetDeviceDescriptor(bus, device, function);
 
-                
-                printf("PCI BUS ");
-                printfHex(bus & 0xFF);
-                
-                printf(", DEVICE ");
-                printfHex(device & 0xFF);
+      if(dev.vendor_id == 0x0000 || dev.vendor_id == 0xFFFF)
+	  continue;
 
-                printf(", FUNCTION ");
-                printfHex(function & 0xFF);
-                
-                printf(" = VENDOR ");
-                printfHex((dev.vendor_id & 0xFF00) >> 8);
-                printfHex(dev.vendor_id & 0xFF);
-                printf(", DEVICE ");
-                printfHex((dev.device_id & 0xFF00) >> 8);
-                printfHex(dev.device_id & 0xFF);
-                printf("\n");
-            }
-        }
+
+      for(int barNum = 0; barNum < 6; barNum++)
+      {
+	  BaseAddressRegister bar = GetBaseAddressRegister(bus, device, function, barNum);
+	  if(bar.address && (bar.type == InputOutput))
+	      dev.portBase = (uint32_t)bar.address;
+      }
+
+      Driver* driver = GetDriver(dev, interrupts);
+      if(driver != 0)
+	  driverManager->AddDriver(driver);
+
+
+      printf("PCI BUS %02X, DEVICE %02X, FUNCTION %02X = VENDOR %04X, DEVICE %04X\n", 
+	      bus & 0xFF, device & 0xFF, function & 0xFF, dev.vendor_id, dev.device_id);
+      }
     }
+  }
 }
 
 

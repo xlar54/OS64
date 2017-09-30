@@ -14,8 +14,6 @@ SyscallHandler::~SyscallHandler()
 }
 
 
-void printf(char*);
-
 uint32_t SyscallHandler::HandleInterrupt(uint32_t esp)
 {
     CPUState* cpu = (CPUState*)esp;

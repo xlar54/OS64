@@ -29,6 +29,7 @@ TO DO:
  * Continue to work with the emudore team to improve emulation
  * Consider a different core OS layer, depending on needs over time
  * Cross compiling for different architectures
+ * QEMU and some real hardware wont switch properly to 80 col text mode when ESC is pressed.  Not sure why.
 
 BUILDING:
  * Code compiles for an x86 linux system using gcc 4.8.4

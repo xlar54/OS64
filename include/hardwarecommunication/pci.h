@@ -4,6 +4,7 @@
 
 #include <hardwarecommunication/port.h>
 #include <drivers/driver.h>
+#include <lib/stdio.h>
 #include <lib/stdint.h>
 #include <hardwarecommunication/interrupts.h>
 

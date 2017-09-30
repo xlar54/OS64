@@ -3,6 +3,8 @@
 #define __EMUDORE64__VGA_H
 
 #include <lib/stdint.h>
+#include <lib/string.h>
+#include <lib/stdio.h>
 
 #define	VGA_AC_INDEX		0x3C0
 #define	VGA_AC_READ		0x3C1
@@ -847,16 +849,10 @@ static uint8_t vga_cursorOn=0;
 
 void setTextModeVGA(int hi_res);
 void setFontVGA(const uint8_t * buffer, int h);
-void* memcpy(uint16_t* destination, const uint16_t* source, size_t num);
-
-void putc(unsigned char);
-void printf(char* str);
 void vga_update_cursor();
 void vga_scroll();
 void clear();
-void printfHex(uint8_t key);
-void printfHex16(uint16_t key);
-void printfHex32(uint32_t key);
-
+void puts(char* string);
+void putc(uint8_t);
 
 #endif

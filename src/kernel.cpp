@@ -1,6 +1,7 @@
 
 #include <lib/stdint.h>
 #include <lib/vga.h>
+#include <lib/stdio.h>
 #include <gdt.h>
 #include <memorymanagement.h>
 #include <hardwarecommunication/interrupts.h>
@@ -11,12 +12,14 @@
 #include <drivers/mouse.h>
 #include <drivers/ata.h>
 #include <multitasking.h>
+#include <filesystem/msdospart.h>
 #include <c64/c64.h>
 
 
 using namespace myos;
 using namespace myos::drivers;
 using namespace myos::hardwarecommunication;
+using namespace myos::filesystem;
 
 // for accessing and sending keyboard or 
 // other external data to c64's IO system
@@ -84,9 +87,10 @@ extern "C" void callConstructors()
 
 extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot_magic*/)
 {
-    setTextModeVGA(0);
+    setTextModeVGA(1);
+    
     printf("Emudore 64 Operating System Starting...\n");
-
+ 
     GlobalDescriptorTable gdt;
     
     // Get start of memory that we can safely work from
@@ -96,11 +100,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     size_t heap = 10*1024*1024;
     MemoryManager memoryManager(heap, (*memupper)*1024 - heap - 10*1024);
     
-    printf("heap: 0x");
-    printfHex((heap >> 24) & 0xFF);
-    printfHex((heap >> 16) & 0xFF);
-    printfHex((heap >> 8 ) & 0xFF);
-    printfHex((heap      ) & 0xFF);
+    printf("heap: 0x%08X", heap);
     printf("\n\n");
     
     // How to use memorymanager to allocate dynamic memory from the heap
@@ -142,9 +142,44 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
   
     //ata0m.Write28(0, (uint8_t*)"Test", 11);
     //ata0m.Flush();
-    //ata0m.Read28(0);
     
-    printf("Starting Emulation...............[OK]\n");
+    printf("\n\nReading ATA Drive MBR: ");
+    
+    uint8_t sector[512];  
+    ata0m.Read28(0, sector, 512);
+    
+    MSDOSPartitionTable dos;
+    dos.ReadPartitions(&ata0m);
+    
+    //displayMemory(sector, 512);
+    
+    if(sector[0x1FE] == 0x55 && sector[0x1FF] == 0xAA)
+      printf(" Valid boot sector!");
+    else
+      printf(" Invalid boot sector!");
+
+    printf("\n\nPartition table\n");
+    printf("----------------------------------------------------------\n");
+    printf("part # | Bootable | Type |                                \n");
+    printf("----------------------------------------------------------\n");
+    
+    for(int t=0; t<4;t++)
+    {
+      printf("  %02X       ", t+1);
+      
+      int partTableIdx = 0x1be + (t*16);
+      
+      if(sector[partTableIdx + 0x00] == 0x00)
+	printf("N");
+    
+      if(sector[partTableIdx + 0x00] == 0x80)
+	printf("Y");
+      
+      printf("         %02X\n", sector[partTableIdx + 0x04]);
+    }
+    
+    
+    printf("\n\nStarting Emulation...............[OK]\n");
    
     //while(1) {};
     
