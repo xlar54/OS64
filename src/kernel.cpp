@@ -29,8 +29,12 @@ C64* c64ptr;
 class IOKeyboardEventHandler : public KeyboardEventHandler
 {
 private:
-  uint8_t mode = 0;  // 0 = emulation, 1 = terminal
+  uint8_t mode;  // 0 = emulation, 1 = terminal
 public:
+    IOKeyboardEventHandler()
+    {
+      mode = 0;
+    }
     void OnKeyDown(uint8_t c)
     {
       // ESC key will toggle between text mode and emulation

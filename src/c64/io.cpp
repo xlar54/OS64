@@ -41,6 +41,9 @@ IO::IO()
   init_color_palette();
   init_keyboard();
   next_key_event_at_ = 0;
+  shift = 0;
+  mode = 0;
+  retval_ = true;
   //prev_frame_was_at_ = std::chrono::high_resolution_clock::now();
 }
 

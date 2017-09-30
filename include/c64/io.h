@@ -25,15 +25,15 @@ class IO
     size_t rows_;
     unsigned int color_palette[16];
     uint8_t keyboard_matrix_[8];
-    bool retval_ = true;
+    bool retval_;
     /* keyboard mappings */
     enum kKeyEvent
     {
       kPress,
       kRelease,
     };
-    uint8_t shift = 0;
-    uint8_t mode = 0;
+    uint8_t shift;
+    uint8_t mode;
 
     unsigned int next_key_event_at_;
     static const int kWait = 18000;

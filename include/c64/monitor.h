@@ -26,7 +26,7 @@ class Monitor
     Sid *sid_;
     Memory *mem_;
     char buf[80];
-    uint8_t bufPtr = 0;
+    uint8_t bufPtr;
     void prompt();
     void process_cmd();
   public:

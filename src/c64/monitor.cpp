@@ -10,6 +10,7 @@
 
 Monitor::Monitor()
 {
+  bufPtr = 0;
 }
 
 Monitor::~Monitor()
