@@ -5,135 +5,246 @@ using namespace myos;
 using namespace myos::filesystem;
 using namespace myos::drivers;
 
-
-void myos::filesystem::ReadBiosParameterBlock(myos::drivers::AdvancedTechnologyAttachment *hd, uint32_t partitionOffset)
+Fat32::Fat32(myos::drivers::AdvancedTechnologyAttachment *hd, uint8_t partition)
 {
- 
-  BiosParameterBlock32 bpb;
-  hd->Read28(partitionOffset, (uint8_t*)&bpb, sizeof(BiosParameterBlock32));
- 
-  printf("\nVolume Label:");
-  char foo[12];
-  for(int j=0;j<11;j++) foo[j] = bpb.volumeLabel[j]; foo[11] = '\0';
-  printf(foo);
-  
-  printf("\nFilesystem Type:");
-  char labelString[9];
-  for(int j=0;j<8;j++) labelString[j] = bpb.fatTypeLabel[j]; labelString[9] = '\0';
-  printf(labelString);
-  printf("\n");
-
-
-  uint32_t fatStart = partitionOffset + bpb.reservedSectors;
-  uint32_t fatSize = bpb.tableSize;
-
-  uint32_t dataStart = fatStart + fatSize*bpb.fatCopies;
-
-  uint32_t rootStart = dataStart + bpb.sectorsPerCluster*(bpb.rootCluster -2);
-
-  DirectoryEntryFat32 dirent[16];
-  hd->Read28(rootStart, (uint8_t*)&dirent[0], 16*sizeof(DirectoryEntryFat32));
-
-  for(int i=0;i<16;i++)
-  {
-    if(dirent[i].name == 0x00)
-      break;
-
-    if((dirent[i].attributes & 0x0F) == 0x0F)
-	continue;
-    
-    // bit 3 = volume label
-    if((dirent[i].attributes & 0x08) == 0x08) // skip volume label
-	continue;
-    
-    // bit 4 = directories
-    if((dirent[i].attributes & 0x10) == 0x10) // directory
-	continue;
-    
-    char fileString[10];
-    for(int j=0;j<8;j++) fileString[j] = dirent[i].name[j]; fileString[9] = '\0';
-    printf(fileString);
-    printf(".");
-    
-    char extString[5];
-    for(int j=0;j<4;j++) extString[j] = dirent[i].ext[j]; extString[4] = '\0';
-    printf(extString);
-    printf("\n");
-    
-    // Get first sector of file
-    uint32_t fileCluster = ((uint32_t)dirent[i].firstClusterHi) << 16 | ((uint32_t)dirent[i].firstClusterLow);
-    uint32_t fileSector = dataStart + bpb.sectorsPerCluster * (fileCluster-2);
-
-    uint32_t buffer[512];
-
-    hd->Read28(fileSector, (uint8_t*)buffer, 512);
-    buffer[dirent[i].size] = '\0';
-    printf((char *)buffer);
-    
-  }
-		
+  _hd = hd;
+  _partition = partition;
 }
 
-void myos::filesystem::ReadDirectory(myos::drivers::AdvancedTechnologyAttachment *hd, uint8_t partition)
+Fat32::~Fat32()
 {
-  // get the master boot record
-  MasterBootRecord mbr;
-  hd->Read28(0, (uint8_t*)&mbr, sizeof(MasterBootRecord));
+}
+
+void Fat32::Initialize()
+{
+  _hd->Read28(0, (uint8_t*)&masterBootRecord, sizeof(MasterBootRecord));
   
   // if this partion is invalid, just exit
-  if(mbr.primaryPartition[partition].partition_id == 0x00)
+  if(masterBootRecord.primaryPartition[_partition].partition_id == 0x00)
     return;
   
-  // Get the bios parameter block
-  BiosParameterBlock32 bpb;
   uint32_t partitionOffset;
-  partitionOffset = mbr.primaryPartition[partition].start_lba;
-  hd->Read28(partitionOffset, (uint8_t*)&bpb, sizeof(BiosParameterBlock32));
+  partitionOffset = masterBootRecord.primaryPartition[_partition].start_lba;
+  _hd->Read28(partitionOffset, (uint8_t*)&biosParameterBlock, sizeof(BiosParameterBlock32));
   
-  uint32_t fatStart = partitionOffset + bpb.reservedSectors;
-  uint32_t fatSize = bpb.tableSize;
-  uint32_t dataStart = fatStart + fatSize*bpb.fatCopies;
-  uint32_t rootStart = dataStart + bpb.sectorsPerCluster*(bpb.rootCluster -2);
+  _fatStart = partitionOffset + biosParameterBlock.reservedSectors;
+  _dataStart = _fatStart + biosParameterBlock.sectorsPerFat*biosParameterBlock.fatCopies;
+  _rootStart = _dataStart + biosParameterBlock.sectorsPerCluster*(biosParameterBlock.rootCluster-2);
+  
+  _hd->Read28(_fatStart, _fat, sizeof(_fat));
+}
 
-  DirectoryEntryFat32 dirent[16];
-  hd->Read28(rootStart, (uint8_t*)&dirent[0], 16*sizeof(DirectoryEntryFat32));
-
-  for(int i=0;i<16;i++)
+void Fat32::ReadPartitions()
+{
+  Initialize();
+  
+  printf("\n\nPartition table\n");
+  printf("----------------------------------------------------------\n");
+  printf("part # | Bootable | Type |                                \n");
+  printf("----------------------------------------------------------\n");
+  
+  for(int t=0; t<4;t++)
   {
-    printf("\n");
-    if(dirent[i].name[0] == 0x00)
-      break;
+    printf("  %02X       ", t+1);
+       
+    if(masterBootRecord.primaryPartition[t].bootable == 0x00)
+      printf("N");
+  
+    if(masterBootRecord.primaryPartition[t].bootable == 0x80)
+      printf("Y");
+    
+    printf("         %02X\n", masterBootRecord.primaryPartition[t].partition_id);
+  }
+  
+}
 
-    //if((dirent[i].attributes & 0x0F) == 0x0F)
-	//continue;
+void Fat32::ReadDir()
+{
+  char volumeLabel[13] = "           \0";
+  
+  Initialize();
+
+  // set this to filecluster to access a file or subdir
+  uint8_t *buffer = ReadNextSectorInChain(biosParameterBlock.rootCluster);
+  
+  while (_endOfChain == 0)
+  {  
+    DirectoryEntryFat32 dirent[16];
+    //((uint8_t*)&dirent)[0] = *buffer;
+    //displayMemory(buffer, 512);
     
-    // bit 3 = volume label
-    if((dirent[i].attributes & 0x08) == 0x08) // skip volume label
+    for(int entry=0;entry<16;entry++)
+	dirent[entry] = *(DirectoryEntryFat32*)(buffer+(sizeof(DirectoryEntryFat32)*entry));
+    
+    for(int i=0;i<16;i++)
+    {
+      if(dirent[i].name[0] == 0x00) continue;//return; 			// end of directory
+      if(dirent[i].name[0] == 0xE5) continue;			// deleted file, skip it     
+      if(dirent[i].name[0] == 0x05) dirent[i].name[0] = 0xE5;	// japanese char impacted by the delete byte
+      
+      // bit 3 = volume label
+      if((dirent[i].attributes & 0x08) == 0x08)
+      {
+	for(int j=0;j<8;j++) volumeLabel[j] = dirent[i].name[j];
+	for(int j=0;j<3;j++) volumeLabel[j+8] = dirent[i].ext[j];
+	printf("\n\nVolume Label: %s\n\n", volumeLabel);
 	continue;
-    
-    // bit 4 = directories
-    if((dirent[i].attributes & 0x10) == 0x10) // directory
-	printf("<");
-    
-    char fileString[9];
-    for(int j=0;j<8;j++) fileString[j] = dirent[i].name[j]; fileString[8] = '\0';
-    printf(fileString);
-    
-    // bit 4 = directories
-    if((dirent[i].attributes & 0x10) == 0x10) // directory
-	printf(">");
-    else
+      }
+      
+      printf("\n");
+      
+      // bit 4 = directories
+      if((dirent[i].attributes & 0x10) == 0x10) // directory
+	  printf("<");
+      
+      char fileName[9];
+      for(int j=0;j<8;j++) fileName[j] = dirent[i].name[j];fileName[8] = '\0';
+      printf(fileName);
+      
+      // bit 4 = directories
+      if((dirent[i].attributes & 0x10) == 0x10) // directory
+	  printf(">");
+      else
+      {
 	printf(".");
+	char extString[5];
+	for(int j=0;j<4;j++) extString[j] = dirent[i].ext[j]; extString[4] = '\0';
+	printf(extString);
+      }
+      
+      // Date
+      printf("   %d-%d-%d", (dirent[i].wDate>>5) & 0x0f, dirent[i].wDate & 0x1f, 1980+((dirent[i].wDate>>9)& 0x7f));
+      
+      // Time
+      printf(" %d:%d", (dirent[i].wTime>>11 & 0x1f), (dirent[i].wTime>>5) & 0x3f); // hh:mm
+      //printf(":%d", (dirent[i].wTime & 0x1f)*2);	//sec
+      
+      // Get first sector of file
+      //uint32_t fileCluster = ((uint32_t)dirent[i].firstClusterHi) << 16 | ((uint32_t)dirent[i].firstClusterLow);
+      //printf("     %04X", fileCluster);
+      //uint32_t fileSector = dataStart + bpb.sectorsPerCluster * (fileCluster-2);
+      //printf("     %d", fileSector);
+      
+      printf("   ");
+      char fsize[10];
+      itoa(dirent[i].size, fsize, 10);
+      printf("%s",fsize);
+    }
+
+    buffer = ReadNextSectorInChain(0);
+  }  
+}
+
+uint8_t* Fat32::ReadNextSectorInChain(uint32_t startOfChain)
+{ 
+  static uint8_t buffer[512];
+  static uint8_t sectorCtr=0;;
+  static uint32_t dataCluster;
+  
+  if (startOfChain != 0)
+  {
+    _endOfChain = 0;
+    sectorCtr = 0;
+    dataCluster = startOfChain;
+  }
+  //printf("\nFAT start sector = %d", _fatStart);
+  //printf("\nData start sector = %d", _dataStart);
+  //printf("\nRoot start sector = %d", _rootStart); 
+  //printf("\nReadNextSectorInChain: startOfChain: %d, sectorCtr: %d, dataCluster: %d\n",startOfChain,sectorCtr,dataCluster);
+  
+  uint32_t nextSectorofCluster =  ((dataCluster-2) * biosParameterBlock.sectorsPerCluster)+ _dataStart;
+  
+  //printf("\n - nextSectorofCluster: %d", nextSectorofCluster);
+  
+  if (sectorCtr < biosParameterBlock.sectorsPerCluster-1)
+  {
+    _hd->Read28(nextSectorofCluster+sectorCtr, buffer, sizeof(buffer));
+    //displayMemory(buffer, 512);
     
-    char extString[5];
-    for(int j=0;j<4;j++) extString[j] = dirent[i].ext[j]; extString[4] = '\0';
-    printf(extString);
+    sectorCtr++;
+    return buffer;
+  }    
+  
+  if (sectorCtr == biosParameterBlock.sectorsPerCluster-1)
+  {
+    // Each FAT32 record is 4 bytes
+    dataCluster = (_fat[4 * dataCluster+3] << 24) | (_fat[4 * dataCluster+2] << 16) | 
+		  (_fat[4 * dataCluster+1] << 8) | _fat[4 * dataCluster];
+
+    //printf("\n new dataCluster : %d", dataCluster);
+
+    if (dataCluster == ENDOFCLUSTER_FAT32)
+    {
+      //printf("\nEnd of cluster chain.");
+      _endOfChain = 1;
+      return 0;
+    }
     
-    printf("   ");
-    char fsize[10];
-    itoa(dirent[i].size, fsize, 10);
-    printf(fsize);
+    nextSectorofCluster =  ((dataCluster-2) * biosParameterBlock.sectorsPerCluster)+ _dataStart;
+    sectorCtr = 0;
     
-        
+    _hd->Read28(nextSectorofCluster+sectorCtr, buffer, sizeof(buffer));
+    sectorCtr++;
+    return buffer;
   }
 }
+
+uint32_t Fat32::GetFileSector(char *find)
+{
+  Initialize();
+
+  // set this to filecluster to access a file or subdir
+  uint8_t *buffer = ReadNextSectorInChain(biosParameterBlock.rootCluster);
+  
+  while (_endOfChain == 0)
+  { 
+    DirectoryEntryFat32 dirent[16];
+   
+    for(int entry=0;entry<16;entry++)
+	dirent[entry] = *(DirectoryEntryFat32*)(buffer+(sizeof(DirectoryEntryFat32)*entry));
+    
+    for(int i=0;i<16;i++)
+    {
+      if(dirent[i].name[0] == 0x00) continue;//return; 		// end of directory
+      if(dirent[i].name[0] == 0xE5) continue;			// deleted file, skip it     
+      if(dirent[i].name[0] == 0x05) dirent[i].name[0] = 0xE5;	// japanese char impacted by the delete byte
+      if((dirent[i].attributes & 0x08) == 0x08) continue;	// volume label
+      if((dirent[i].attributes & 0x10) == 0x10) continue;	// directory
+      
+      char filename[13];
+      filename[8] = '.';
+      filename[12] = 0;
+      
+      for(int j=0;j<8;j++) filename[j] = dirent[i].name[j];
+      for(int j=0;j<3;j++) filename[j+9] = dirent[i].ext[j]; 
+      
+      if(!strcmp(filename, find))
+      {
+	uint32_t retval = ((uint32_t)dirent[i].firstClusterHi) << 16 | ((uint32_t)dirent[i].firstClusterLow);
+	return retval;
+      }
+    }
+
+    buffer = ReadNextSectorInChain(0);
+  } 
+  
+  return 0;
+}
+
+void Fat32::ReadFile(char *filename)
+{
+  Initialize();
+  uint32_t startCluster = GetFileSector(filename);
+   
+  if(startCluster == 0)
+    return;
+
+  uint8_t *buffer = ReadNextSectorInChain(startCluster);
+  
+  while (_endOfChain == 0)
+  { 
+    displayMemory(buffer, 512);
+    buffer = ReadNextSectorInChain(0);
+  }  
+   
+}	

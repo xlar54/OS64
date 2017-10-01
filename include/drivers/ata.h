@@ -7,6 +7,11 @@
 #include <hardwarecommunication/interrupts.h>
 #include <hardwarecommunication/port.h>
 
+#define _ATA_FIRST		0x1F0	// interrupt 14
+#define _ATA_SECOND		0x170	// interrupt 15
+#define	_ATA_THIRD		0x1E8
+#define _ATA_FOURTH		0x168
+
 namespace myos
 {
     namespace drivers

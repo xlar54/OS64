@@ -12,7 +12,7 @@
 #include <drivers/mouse.h>
 #include <drivers/ata.h>
 #include <multitasking.h>
-#include <filesystem/msdospart.h>
+#include <filesystem/fat.h>
 #include <c64/c64.h>
 
 
@@ -134,53 +134,25 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
        
     printf("Initializing interrupts..........[OK]\n");
     interrupts.Activate();
-    
-    // 0x1F0 = primary		interrupt 14
-    // 0x170 = secondary	interrupt 15
-    // 0x1E8 = third
-    // 0x168 = fourth
-    
-    printf("\nS-ATA primary master: ");
-    AdvancedTechnologyAttachment ata0m(true, 0x1F0);  
+       
+    //printf("\nS-ATA primary master: ");
+    //AdvancedTechnologyAttachment ata0m(true, _ATA_FIRST);  
     //ata0m.Identify();
-  
     //ata0m.Write28(0, (uint8_t*)"Test", 11);
     //ata0m.Flush();
     
-    printf("\n\nReading ATA Drive MBR: ");
-    
-    uint8_t sector[512];  
-    ata0m.Read28(0, sector, 512);
-    
-    MSDOSPartitionTable dos;
-    dos.ReadPartitions(&ata0m);
-    
     //displayMemory(sector, 512);
     
-    if(sector[0x1FE] == 0x55 && sector[0x1FF] == 0xAA)
-      printf(" Valid boot sector!");
-    else
-      printf(" Invalid boot sector!");
+    //Fat32 fat32(&ata0m,0);
+    //fat32.ReadPartitions();
+    //fat32.ReadDir();
+    //uint32_t ss = fat32.GetFileSector("COMMAND .COM");
+    //printf("\n\nStarting sector: %d", ss);
 
-    printf("\n\nPartition table\n");
-    printf("----------------------------------------------------------\n");
-    printf("part # | Bootable | Type |                                \n");
-    printf("----------------------------------------------------------\n");
-    
-    for(int t=0; t<4;t++)
-    {
-      printf("  %02X       ", t+1);
-      
-      int partTableIdx = 0x1be + (t*16);
-      
-      if(sector[partTableIdx + 0x00] == 0x00)
-	printf("N");
-    
-      if(sector[partTableIdx + 0x00] == 0x80)
-	printf("Y");
-      
-      printf("         %02X\n", sector[partTableIdx + 0x04]);
-    }
+    //fat32.ReadFile("COMMAND .COM");
+    //fat32.ReadFile(&ata0m,0,   "TEST0001.TXT");
+    //fat32.ReadPartitions(&ata0m);
+    //fat32.ReadDirectory(&ata0m,0);
     
     
     printf("\n\nStarting Emulation...............[OK]\n");
