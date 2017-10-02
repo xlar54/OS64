@@ -135,25 +135,24 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf("Initializing interrupts..........[OK]\n");
     interrupts.Activate();
        
-    //printf("\nS-ATA primary master: ");
-    //AdvancedTechnologyAttachment ata0m(true, _ATA_FIRST);  
+    printf("\nS-ATA primary master: ");
+    AdvancedTechnologyAttachment ata0m(true, _ATA_FIRST);  
     //ata0m.Identify();
     //ata0m.Write28(0, (uint8_t*)"Test", 11);
     //ata0m.Flush();
     
     //displayMemory(sector, 512);
     
-    //Fat32 fat32(&ata0m,0);
-    //fat32.ReadPartitions();
-    //fat32.ReadDir();
-    //uint32_t ss = fat32.GetFileSector("COMMAND .COM");
-    //printf("\n\nStarting sector: %d", ss);
+    Fat32 fat32(&ata0m,0);
+    fat32.ReadPartitions();
+    fat32.ReadDir();
 
     //fat32.ReadFile("COMMAND .COM");
-    //fat32.ReadFile(&ata0m,0,   "TEST0001.TXT");
+    //fat32.ReadFile("TEST0001.TXT");
     //fat32.ReadPartitions(&ata0m);
     //fat32.ReadDirectory(&ata0m,0);
     
+   // while(1) {};
     
     printf("\n\nStarting Emulation...............[OK]\n");
    

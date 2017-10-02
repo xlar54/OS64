@@ -72,6 +72,7 @@ void Memory::setup_memory_banks(uint8_t v)
   for(uint16_t i=0; i < 8192; i++)
     mem_rom_[kBaseAddrKernal+i] = kernalRomC64[i];
   
+   
   //load_rom("basic.901226-01.bin",kBaseAddrBasic);
   //load_rom("characters.901225-01.bin",kBaseAddrChars);
   //load_rom("kernal.901227-03.bin",kBaseAddrKernal);
@@ -91,6 +92,12 @@ void Memory::setup_memory_banks(uint8_t v)
     banks_[kBankCharen] = kROM;
   /* write the config to the zero page */
   write_byte_no_io(kAddrMemoryLayout, v);
+  
+  //for(uint16_t i=2; i < 4099; i++)
+  //  mem_ram_[49152+(i-2)] = monitorC000[i];
+  
+  for(uint16_t i=2; i < 4225; i++)
+    mem_ram_[36864+(i-2)] = micromon[i];
 }
 
 /**
