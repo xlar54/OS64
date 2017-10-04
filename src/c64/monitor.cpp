@@ -7,6 +7,7 @@
 #include <c64/cpu.h>
 #include <c64/memory.h>
 #include <lib/string.h>
+#include <lib/stdlib.h>
 
 Monitor::Monitor()
 {
@@ -19,14 +20,9 @@ Monitor::~Monitor()
 
 void Monitor::Run()
 {
-  setTextModeVGA(0);
-  vga_cursorOn = 1;
-  
   printf("Emudore 64 - ML Monitor:\n\n");
   printf("====================================================\n");
-  printf("Commands:\n");
-  printf("M - Memory Display\n");
-  printf("====================================================\n");
+  help();
   
   prompt();
   
@@ -59,6 +55,11 @@ void Monitor::OnKeyDown(uint8_t c)
       prompt();
       break;
     }
+    case '?':
+    {
+      help();
+      break;
+    }
     default:
       if(bufPtr<80)
       {
@@ -71,36 +72,108 @@ void Monitor::OnKeyDown(uint8_t c)
   }
 }
 
+void Monitor::help()
+{
+  printf("Commands:\n");
+  printf("M - Memory Display\n");
+  printf("R - Register Display\n");
+  printf("$ - Directory (ATA FAT32 Harddisk Master 0)\n");
+  printf("ESC - Return to system\n");
+  printf("====================================================\n");
+  printf("Built in ML monitor activated via SYS 36864\n");
+}
+
 void Monitor::prompt()
 {
+  for(int x=0;x<80;x++)
+    buf[x] = 0;
+  
+  bufPtr = 0;
+  
   printf("\n>");
 }
 
 void Monitor::process_cmd()
 {
- 
-  if(!strcmp(buf, "M 0400"))
+  char cmd;
+  char param1[80];
+  char param2[80];
+  int i=0;
+  int p1=0;
+  int p2=0;  
+  
+  if(bufPtr==0)
+    return;  
+  
+  cmd = buf[i++];
+  
+  if(buf[i] == ' ')
   {
-    printf("\n\n0400: "); 
-    
-    printf("%02X", mem_->read_byte(1024));
-    printf("-");
-    printf("%02X", mem_->read_byte(1025));
-    printf("-");
-    printf("%02X", mem_->read_byte(1026));
-    printf("-");
-    printf("%02X", mem_->read_byte(1027));
-    printf("-");
-    printf("%02X", mem_->read_byte(1028));
-    printf("-");
-    printf("%02X", mem_->read_byte(1029));
-    printf("-");
-    printf("%02X", mem_->read_byte(1030));
-    printf("-");
-    printf("%02X", mem_->read_byte(1031));
-    printf("-");
-    printf("%02X", mem_->read_byte(1032));
-    printf("-");
+    while(buf[++i] != ' ' && buf[i] != 0)
+    {
+      param1[p1++] = buf[i];
+    }
+    param1[p1] = 0;
+  }
+  
+  if(buf[i] == ' ')
+  {    
+    while(buf[++i] != 0)
+    {
+      param2[p2++] = buf[i];
+    }
+    param2[p2] = 0;
+  }
+  
+  switch(cmd)
+  {
+    case 'R':
+    {
+      printf("\n PC  AC XR YR SP\n");
+      printf("%04X %02X %02X %02X %02X\n", cpu_->pc(), cpu_->a(), cpu_->x(), cpu_->y(), cpu_->sp());
+      break;
+    }
+    case 'M':
+    {
+      int p1 = htoi(param1);
+      int p2 = htoi(param2);
+           
+      if(!p2)
+	p2 = p1 + 16;
+      
+      if(p2>0xFFFF)
+      {
+	printf("?");
+	return;
+      }
+      
+      while(p1 < p2)
+      {
+	printf("\n%04X: ",p1); 
+	int t=p1;
+	
+	for(int x=0;x<16;x++)
+	{
+	  printf("%02X", mem_->read_byte(p1++));
+	  printf("%c", ' ');
+	}
+	for(int x=0;x<16;x++)
+	{
+	  if(mem_->read_byte(t) >31 && mem_->read_byte(t) < 127)
+	    printf("%c", mem_->read_byte(t++));
+	  else
+	  {
+	    printf(".");
+	    t++;
+	  }
+	}
+      }
+  
+      break;
+    }
+    default:
+      printf("?");
+      break;
   }
 }
 

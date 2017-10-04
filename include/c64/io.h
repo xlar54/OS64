@@ -63,13 +63,4 @@ class IO
     void screen_refresh();
 };
 
-// inline member functions accesible from other classes /////////////////////
-
-//inline void IO::screen_update_pixel(int x, int y, int color)
-//{
-//  unsigned short offset = (y<<8) + (y<<6) + x;
-//  *((uint8_t*)(0xA0000 + offset)) = color;
-//  
-//};
-
 #endif

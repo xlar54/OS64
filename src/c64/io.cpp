@@ -22,9 +22,7 @@
 // clas ctor and dtor //////////////////////////////////////////////////////////
 
 IO::IO()
-{
-  write_regs(g_320x200x256);
-  
+{  
   cols_ = Vic::kVisibleScreenWidth;
   rows_ = Vic::kVisibleScreenHeight;
 
@@ -164,24 +162,6 @@ void IO::type_character(char c)
 {
 
 }
-
-// screen handling /////////////////////////////////////////////////////////////
-
-//void IO::screen_update_pixel(int x, int y, int color)
-//{
-//  vga_put_pixel(x, y,color);
-//};
-
-//void IO::screen_draw_rect(int x, int y, int n, uint8_t color)
-//{
-//  vga_draw_rect(x, y, n, color);
-//}
-
-//void IO::screen_draw_border(int y, int color)
-//{
-//  vga_draw_rect(0, y, cols_, color);
-//}
-
 
 void IO::screen_refresh()
 {

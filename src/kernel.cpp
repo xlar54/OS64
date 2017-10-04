@@ -43,13 +43,15 @@ public:
 	if (mode == 0) 
 	{ 
 	  mode = 1; 
+	  vga_set_mode(80,25,16);
+	  vga_cursorOn = 1;
 	  c64ptr->io_->mon_->Run();
 	  return;
 	}
 	else 
 	{ 
 	  mode = 0; 
-	  write_regs(g_320x200x256);
+	  vga_set_mode(320,200,8);
 	  c64ptr->io_->init_color_palette();
 	  return;
 	}
@@ -91,8 +93,8 @@ extern "C" void callConstructors()
 
 extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot_magic*/)
 {
-    setTextModeVGA(1);
-    
+    vga_set_mode(80,25,16);
+  
     printf("Emudore 64 Operating System Starting...\n");
  
     GlobalDescriptorTable gdt;
@@ -143,25 +145,42 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     //displayMemory(sector, 512);
     
-    Fat32 fat32(&ata0m,0);
-    fat32.ReadPartitions();
-    fat32.ReadDir();
+    //Fat32 fat32(&ata0m,0);
+    //fat32.ReadPartitions();
+    //fat32.ReadDir();
 
     //fat32.ReadFile("COMMAND .COM");
     //fat32.ReadFile("TEST0001.TXT");
     //fat32.ReadPartitions(&ata0m);
     //fat32.ReadDirectory(&ata0m,0);
     
-   // while(1) {};
-    
-    printf("\n\nStarting Emulation...............[OK]\n");
-   
     //while(1) {};
     
-    C64 c64;
-    c64ptr = &c64;
-    c64.start();
-
+    printf("\n\nSetting video mode...............");
+    //while(1) {};
+    
+    //vga_set_mode(640,480,4);
+  /*  vga_set_mode(320,240,8);
+    vga_gfx_clear(0);
+    vga_draw_line(0,0,400,20,15);
+    
+    while(1) {};
+    */
+    
+    if(vga_set_mode(320,200,8))
+    {
+      printf("[OK]\n");
+      C64 c64;
+      c64ptr = &c64;
+      c64.start();
+    }
+    else
+    {
+      printf("[FAILED]\n");
+      while(1) {};
+    }
+  
+    
 }
 
 

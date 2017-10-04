@@ -30,7 +30,7 @@ void writeRegVGA(uint16_t reg, uint8_t idx, uint8_t val)
    outb(reg + 1, val);
 }
 
-void write_regs(unsigned char *regs)
+void vga_write_regs(unsigned char *regs)
 {
   unsigned i;
 
@@ -86,7 +86,7 @@ void write_regs(unsigned char *regs)
   outb(VGA_AC_INDEX, 0x20);
 }
 
-void read_regs(unsigned char *regs)
+void vga_read_regs(unsigned char *regs)
 {
   unsigned i;
 
@@ -132,52 +132,82 @@ void read_regs(unsigned char *regs)
   outb(VGA_AC_INDEX, 0x20);
 }
 
-static unsigned get_fb_seg(void)
+uint8_t vga_set_mode(uint32_t width, uint32_t height, uint8_t bpp) 
 {
-  unsigned seg;
+  if (!vga_supports_mode(width, height, bpp)) 
+	  return 0;
 
-  outb(VGA_GC_INDEX, 6);
-  seg = inb(VGA_GC_DATA);
-  seg >>= 2;
-  seg &= 3;
-  switch(seg)
-  {
-  case 0:
-  case 1:
-	  seg = 0xA000;
-	  break;
-  case 2:
-	  seg = 0xB000;
-	  break;
-  case 3:
-	  seg = 0xB800;
-	  break;
-  }
-  return seg;
+  if (width == 320 && height == 200 && bpp == 8) vga_write_regs(g_320x200x256);
+  else if (width == 320 && height == 240 && bpp == 8) vga_write_regs(g_320x200x256_modex);
+  else if (width == 640 && height == 480 && bpp == 4) vga_write_regs(vga_mode_12h);
+  else if (width == 80 && height == 25 && bpp == 16) vga_set_textmode(0);
+  else if (width == 90 && height == 60 && bpp == 16) vga_set_textmode(1);
+  
+  //#if VGA_MAX_BPP == 16
+  //if (width < 320)
+//	  vga_framebuffer_segment = (uint16_t*) vga_get_framebuffer_segment();
+  //else
+	  vga_framebuffer_segment = (uint8_t*) vga_get_framebuffer_segment();
+  //#endif
+
+  vga_mode_width = width;
+  vga_mode_height = height;
+  vga_mode_bpp = bpp;
+
+  return 1;
+	
 }
 
-void vga_clear(int color)
+uint8_t* vga_get_framebuffer_segment(void) 
+{
+  outb(VGA_GC_INDEX, 0x06);
+
+  switch (inb(VGA_GC_DATA) & (3 << 2)) {
+	  case 0 << 2: return (uint8_t*) 0x00000;
+	  case 1 << 2: return (uint8_t*) 0xA0000;
+	  case 2 << 2: return (uint8_t*) 0xB0000;
+	  case 3 << 2:
+	  default: return (uint8_t*) 0xB8000;
+	  
+  }
+	
+}
+
+uint8_t vga_supports_mode(uint32_t width, uint32_t height, uint8_t bpp) 
+{
+  return \
+    (width == 320 && height == 200 && bpp == 8) || \
+    (width == 320 && height == 240 && bpp == 8) || \
+    (width == 640 && height == 480 && bpp == 4) || \
+    (width == 80 && height == 25 && bpp == 16) || \
+    (width == 90 && height == 60 && bpp == 16);
+	
+}
+
+void vga_gfx_clear(int color)
 {
   int x,y;
-  for(x=0; x<320;x++)
-    for(y=0; y<200;y++)
+  for(x=0; x<vga_mode_width;x++)
+    for(y=0; y<vga_mode_height;y++)
       vga_put_pixel(x,y,color);
 }
 
-void vga_put_pixel(int x, int y, int color)
+void vga_put_pixel(int x, int y, uint8_t color)
 {
   unsigned short offset = (y<<8) + (y<<6) + x;
-  *(gfxVideoRAM + offset) = color;
   
+  //*(vga_framebuffer_segment + offset) = color;
+  uint8_t* address = gfxVideoRAM + vga_mode_width * y + x;
+  *address = (uint8_t) color;
 };
 
 void vga_draw_rect(int x, int y, int n, uint8_t color)
 {
 
   for(int i=0; i < n ; i++)
-  {
-    unsigned short offset = (y<<8) + (y<<6) + (x+i);
-    *(gfxVideoRAM + offset) = color;
+  {  
+    uint8_t* address = gfxVideoRAM + vga_mode_width * y + x + i;
+    *address = (uint8_t) color;
   }
 }
 
@@ -243,20 +273,20 @@ void vga_draw_line(int x1, int y1, int x2, int y2, uint8_t color)
 
 //  Text Mode Functions
 
-void setTextModeVGA(int hi_res)
+void vga_set_textmode(int hi_res)
 {
   unsigned rows, cols, ht, i;
 
   if(hi_res)
   {
-    write_regs(g_90x60_text);
+    vga_write_regs(g_90x60_text);
     textCols = 90;
     textRows = 60;
     ht = 8;
   }
   else
   {
-    write_regs(g_80x25_text);
+    vga_write_regs(g_80x25_text);
     textCols = 80;
     textRows = 25;
     ht = 16;
@@ -264,9 +294,9 @@ void setTextModeVGA(int hi_res)
 
   // set font
   if(ht == 16)
-    setFontVGA(g_8x16_font, 16);
+    vga_set_textfont(g_8x16_font, 16);
   else
-    setFontVGA(g_8x8_font, 8);
+    vga_set_textfont(g_8x8_font, 8);
 
   // Standard PC colors	18 bit
   vga_set_color(0,0,0,0);
@@ -286,10 +316,10 @@ void setTextModeVGA(int hi_res)
   vga_set_color(14,63,63,0);
   vga_set_color(15,63,63,63);
 
-  clear();
+  vga_textmode_clear();
 }
 
-void setFontVGA(const uint8_t * buffer, int h)
+void vga_set_textfont(const uint8_t * buffer, int h)
 {
    unsigned char seq2, seq4, gfx6;
    int i, j;
@@ -375,7 +405,7 @@ void vga_update_cursor()
   //}
 }
 
-void clear()
+void vga_textmode_clear()
 {
   int x;
   int y;

@@ -28,6 +28,7 @@ class Monitor
     char buf[80];
     uint8_t bufPtr;
     void prompt();
+    void help();
     void process_cmd();
   public:
     Monitor();
