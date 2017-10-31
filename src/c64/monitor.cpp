@@ -82,6 +82,7 @@ void Monitor::help()
   printf("S - Sector Display (S sectorNumInHex #bytesInDec)\n");
   printf("D - Directory (ATA FAT32 Harddisk Master 0)\n");
   printf("L - Load file to RAM (L FILENAME.EXT C000)\n");
+  printf("W - Write RAM to file (W FILENAME.EXT C000 C1FF)\n");
   printf("ESC - Return to system\n");
   printf("====================================================\n");
   printf("Built in ML monitor activated via SYS 36864\n");
@@ -102,9 +103,11 @@ void Monitor::process_cmd()
   char cmd;
   char param1[80];
   char param2[80];
+  char param3[80];
   int i=0;
   int p1=0;
-  int p2=0;  
+  int p2=0;
+  int p3=0;
   
   if(bufPtr==0)
     return;  
@@ -122,11 +125,20 @@ void Monitor::process_cmd()
   
   if(buf[i] == ' ')
   {    
-    while(buf[++i] != 0)
+    while(buf[++i] != ' ' && buf[i] != 0)
     {
       param2[p2++] = buf[i];
     }
     param2[p2] = 0;
+  }
+  
+  if(buf[i] == ' ')
+  {    
+    while(buf[++i] != 0)
+    {
+      param3[p3++] = buf[i];
+    }
+    param3[p3] = 0;
   }
   
   switch(cmd)
@@ -223,10 +235,31 @@ void Monitor::process_cmd()
       printf("\nstatus=%d",fstatus);
       break;
     }
-    case 'B':
+    case 'W':
     {
-      uint32_t startingCluster = 0;
-      int fstatus = fat32_->AllocateCluster(&startingCluster); 
+      int fstatus = 0;
+      uint16_t mStart = htoi(param2);
+      uint16_t mEnd = htoi(param3);
+      
+      if(mStart > mEnd)
+      {
+	printf("\n%04X > %04X", mStart, mEnd);
+	return;
+      }
+      
+      fstatus = fat32_->OpenFile(1, (uint8_t*)param1, FILEACCESSMODE_CREATE);
+      
+      if(fstatus == FILE_STATUS_OK)
+      {
+	while(fstatus == FILE_STATUS_OK && mStart <= mEnd)
+	{
+	  uint8_t b = mem_->read_byte(mStart++);
+	  fstatus = fat32_->WriteNextFileByte(1,b);
+	}
+
+	fat32_->CloseFile(1);
+      }
+      printf("\nstatus=%d",fstatus);
       break;
     }
     case 'M':

@@ -351,10 +351,6 @@ int Fat32::OpenFile(uint8_t filenumber, uint8_t* filename, uint8_t mode)
     if(fileCluster != 0)
       return FILE_STATUS_FILEEXISTS;
     
-    // create a buffer of at least one cluster size
-    uint32_t size = _bpb.sectorsPerCluster * 512;
-    uint8_t* buffer = new uint8_t[size];
-
     openFilesList[filenumber].mode = FILEACCESSMODE_WRITE;
     
     uint8_t file8[8], ext[3];
@@ -365,7 +361,7 @@ int Fat32::OpenFile(uint8_t filenumber, uint8_t* filename, uint8_t mode)
     openFilesList[filenumber].size = 0;
     openFilesList[filenumber].locationPtr = 0;
     openFilesList[filenumber].startingCluster = 0;
-    openFilesList[filenumber].buffer = buffer;
+    openFilesList[filenumber].buffer = new uint8_t[_bpb.sectorsPerCluster * 512]; //buf = 1 cluster size
     
     CreateDirectoryEntry(filename, ext, 0);
     
@@ -414,8 +410,13 @@ int Fat32::FlushWriteBuffer(uint8_t filenumber)
 
   uint32_t sector = _dataStart + _bpb.sectorsPerCluster * (freeCluster-2);
 
-  _hd->WriteSector(sector, openFilesList[filenumber].buffer, 512);
+  for(int x=0;x<_bpb.sectorsPerCluster;x++)
+    _hd->WriteSector(sector+x, &openFilesList[filenumber].buffer[512*x], 512);
   
+  // clear the buffer
+  delete [] openFilesList[filenumber].buffer;
+  openFilesList[filenumber].buffer = new uint8_t[_bpb.sectorsPerCluster * 512];
+    
   // reset pointer to start of buffer
   openFilesList[filenumber].locationPtr = 0;
 
@@ -530,8 +531,11 @@ int Fat32::AllocateCluster(uint32_t* startingCluster)
       for(int x=0;x<_bpb.bytesPerSector;x+=4)
       {
 	int ptr = (sectorCtr * _bpb.bytesPerSector) + x;
-	//uin32_t i32 = _fatBuffer[0] | (_fatBuffer[1] << 8) | (_fatBuffer[2] << 16) | (_fatBuffer[3] << 24);
-	if(_fatBuffer[ptr] == 0 && _fatBuffer[ptr+1] == 0 && _fatBuffer[ptr+2] == 0 && _fatBuffer[ptr+3] == 0)
+	
+	uint32_t i32 = _fatBuffer[ptr] | (_fatBuffer[ptr+1] << 8) | 
+			(_fatBuffer[ptr+2] << 16) | (_fatBuffer[ptr+3] << 24);
+	
+	if(i32 == FREECLUSTER_FAT32)
 	{
 	  // Mark this as the last cluster.  Expansion happens elsewhere
 	  _fatBuffer[ptr+0] = 0xFF;  _fatBuffer[ptr+1] = 0xFF;
