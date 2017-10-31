@@ -3,5 +3,6 @@
 
 char* itoa(int value, char* result, int base);
 unsigned int htoi (const char *ptr);
+int atoi(char *str);
 
 #endif

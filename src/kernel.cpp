@@ -137,22 +137,54 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf("Initializing interrupts..........[OK]\n");
     interrupts.Activate();
        
-    printf("\nS-ATA primary master: ");
+    printf("\nATA pri master: ");
     AdvancedTechnologyAttachment ata0m(true, _ATA_FIRST);  
-    //ata0m.Identify();
-    //ata0m.Write28(0, (uint8_t*)"Test", 11);
-    //ata0m.Flush();
+    ata0m.Identify();
+    
+    printf("\nATA pri slave : ");
+    AdvancedTechnologyAttachment ata0s(false, _ATA_FIRST);  
+    ata0s.Identify();
+    
+    printf("\nATA sec master: ");
+    AdvancedTechnologyAttachment ata1m(true, _ATA_SECOND);  
+    ata1m.Identify();
+    
+    printf("\nATA sec slave : ");
+    AdvancedTechnologyAttachment ata1s(false, _ATA_SECOND);  
+    ata1s.Identify();
+    
+    uint32_t s1 = 0x0FFFFFFE;
+    //s1 = 0;
+    ata0m.WriteSector(s1, (uint8_t*)"LBA48-Z", 7);  
+    ata0m.WriteSector(s1+1, (uint8_t*)"LBA48-V", 7);
+    ata0m.WriteSector(s1+2, (uint8_t*)"LBA48-O", 7);
+    
+    /*
+    uint8_t buffer[512];
+    ata0m.ReadSector(s1, buffer); displayMemory(buffer, 16);
+    ata0m.ReadSector(s1+1, buffer); displayMemory(buffer, 16);
+    ata0m.ReadSector(s1+2, buffer); displayMemory(buffer, 16);
+    // ata0m.Read28(0, buffer); displayMemory(buffer, 16);
+    
+    while(1) {};*/
+    
+    //ata0m.Write28(268435456, (uint8_t*)"LBA28-0", 7);
+    //ata0m.Write28(268435457, (uint8_t*)"LBA48-1", 7);
+    //ata0m.Write28(268990000, (uint8_t*)"LBA28-2", 7);
+    
+    //while(1) {};
     
     //displayMemory(sector, 512);
     
-    //Fat32 fat32(&ata0m,0);
+    Fat32 fat32(&ata0m,0);
+    
+
     //fat32.ReadPartitions();
     //fat32.ReadDir();
+    //fat32.WriteDir((uint8_t*)"12345678",(uint8_t*)"EXT", 32);
 
     //fat32.ReadFile("COMMAND .COM");
     //fat32.ReadFile("TEST0001.TXT");
-    //fat32.ReadPartitions(&ata0m);
-    //fat32.ReadDirectory(&ata0m,0);
     
     //while(1) {};
     
@@ -172,6 +204,8 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
       printf("[OK]\n");
       C64 c64;
       c64ptr = &c64;
+      c64ptr->io_->fat32(&fat32);
+      c64ptr->io_->mon_->fat32(&fat32);
       c64.start();
     }
     else

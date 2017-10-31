@@ -7,6 +7,12 @@
 #include <c64/memory.h>
 #include <c64/monitor.h>
 
+#include <drivers/ata.h>
+#include <filesystem/fat.h>
+
+using namespace myos::hardwarecommunication;
+using namespace myos::filesystem;
+
 class Monitor;
 
 /**
@@ -40,6 +46,9 @@ class IO
     /* vertical refresh sync */
     //std::chrono::high_resolution_clock::time_point prev_frame_was_at_;
     void vsync();
+
+    Fat32 *fat32_;
+    
   public:
     IO();
     ~IO();
@@ -49,6 +58,8 @@ class IO
     void cpu(Cpu *v){cpu_=v;};
     void memory(Memory *m) {mem_ = m;};
     void monitor(Monitor *m) {mon_ = m;};
+    void fat32(Fat32 *m) { fat32_ = m; };
+    
     void init_color_palette();
     void init_keyboard();
     void OnKeyDown(uint8_t c);

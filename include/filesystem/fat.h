@@ -11,13 +11,30 @@
 using namespace myos::drivers;
 // https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
 
-#define ENDOFCLUSTER_FAT32	0x0FFFFFFF
+#define FREECLUSTER_FAT32	0x00000000
+#define ENDOFCLUSTER_FAT32	0x0FFFFFF8
 #define BADCLUSTER_FAT32	0x0FFFFFF7
+
+
+#define FILEACCESSMODE_CLOSED	0x00
+#define FILEACCESSMODE_READ	0x01
+#define FILEACCESSMODE_WRITE	0x02
+#define FILEACCESSMODE_CREATE	0x03
+
+#define FILE_STATUS_OK		0x00
+#define FILE_STATUS_FILEOPEN	0x01
+#define FILE_STATUS_NOTFOUND	0x02
+#define FILE_STATUS_FILECLSD	0x03
+#define FILE_STATUS_EOF		0x04
+#define FILE_STATUS_NODEVICE	0x05
+#define FILE_STATUS_FILEEXISTS	0x06
+#define FILE_STATUS_DISKFULL	0x07
+
 
 namespace myos
 {
   namespace filesystem
-  {
+  { 
     struct PartitionTableEntry
     {
 	    uint8_t bootable;
@@ -34,7 +51,7 @@ namespace myos
 	    uint32_t start_lba;
 	    uint32_t length;
     } __attribute__((packed));
-
+   
     struct MasterBootRecord
     {
 	    uint8_t bootloader[440];
@@ -45,7 +62,8 @@ namespace myos
 	    
 	    uint16_t magicnumber;
     } __attribute__((packed));
-    
+ 
+   
     struct BiosParameterBlock32
     {
 	    uint8_t jump[3];
@@ -102,31 +120,65 @@ namespace myos
 	    uint16_t firstClusterLow;	// Starting cluster (0 for an empty file)
 	    uint32_t size;		// File size in bytes
     } __attribute__((packed));
-	  
+    
+    struct FileStatus 
+    {
+      uint8_t mode;
+      uint8_t filename[8];
+      uint8_t ext[3];
+      uint32_t size;
+      uint32_t locationPtr;
+      uint8_t* buffer;
+      uint32_t startingCluster;
+    };
+
     class Fat32 {
     
     private:
 	myos::drivers::AdvancedTechnologyAttachment *_hd;
 	uint8_t _partition;
-	MasterBootRecord masterBootRecord;
-	BiosParameterBlock32 biosParameterBlock;
+	MasterBootRecord _mbr;
+	BiosParameterBlock32 _bpb;
 	uint8_t _endOfChain;
 	uint32_t _fatStart;
 	uint32_t _dataStart;
 	uint32_t _rootStart;
-	uint8_t _fat[512];
+	uint8_t* _fat;
+	uint32_t _lastSectorRead;
+	uint8_t *_fatBuffer;
 	
-	void Initialize();
+	void LoadFAT();
 	uint8_t* ReadNextSectorInChain(uint32_t startOfChain);
-	uint32_t GetFileSector(char *filename);
+	struct FileStatus openFilesList[256];
+
+	
     public:
       Fat32(myos::drivers::AdvancedTechnologyAttachment *hd, uint8_t partition);
       ~Fat32();
       
-      void ReadDir();
-      void ReadFile(char *filename);      
+      void ReadDirectory(uint32_t startCluster);
+      void ReadFile(uint8_t *filename, uint8_t* data, uint32_t size);     
       void ReadPartitions();
-
+      void ReadSector(uint32_t sector, uint8_t *buffer);
+      uint32_t GetFileSize(uint8_t* filename);
+      uint32_t GetFileCluster(uint8_t* filename);
+      
+      int OpenFile(uint8_t filenumber, uint8_t* filename, uint8_t mode);
+      int CloseFile(uint8_t filenumber);
+      int ReadNextFileByte(uint8_t filenumber, uint8_t* b);
+      
+      int ParseFilename(uint8_t* filename, uint8_t* filename8, uint8_t* ext);
+      int AllocateCluster(uint32_t* startingCluster);
+      int WriteNextFileByte(uint8_t filenumber, uint8_t b);
+      int FlushWriteBuffer(uint8_t filenumber);
+      void ResetOpenFileListEntry(uint8_t filenumber);
+      
+      void CreateDirectoryEntry(uint8_t* filename, uint8_t* ext, uint32_t size);
+      int UpdateDirectoryEntry(uint8_t* filename, uint8_t* ext, uint32_t size, uint32_t startingCluster);
+      
+      void WriteDir(uint8_t* filename, uint8_t* ext, uint32_t size);
+      
+      uint8_t* GetCBMDir();
      
       
     };

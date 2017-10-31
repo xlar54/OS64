@@ -77,7 +77,11 @@ void Monitor::help()
   printf("Commands:\n");
   printf("M - Memory Display\n");
   printf("R - Register Display\n");
-  printf("$ - Directory (ATA FAT32 Harddisk Master 0)\n");
+  printf("P - Partition information\n");
+  printf("F - Read File (F <filename>)\n");
+  printf("S - Sector Display (S sectorNumInHex #bytesInDec)\n");
+  printf("D - Directory (ATA FAT32 Harddisk Master 0)\n");
+  printf("L - Load file to RAM (L FILENAME.EXT C000)\n");
   printf("ESC - Return to system\n");
   printf("====================================================\n");
   printf("Built in ML monitor activated via SYS 36864\n");
@@ -131,6 +135,98 @@ void Monitor::process_cmd()
     {
       printf("\n PC  AC XR YR SP\n");
       printf("%04X %02X %02X %02X %02X\n", cpu_->pc(), cpu_->a(), cpu_->x(), cpu_->y(), cpu_->sp());
+      break;
+    }
+    case 'S':
+    {
+      int p1 = htoi(param1);
+      int p2 = atoi(param2);
+      
+      if(!p2)
+	p2 = 256;
+      
+      if(p2 > 512)
+      {
+	printf("?");
+	return;
+      }
+      uint8_t buffer[512];
+      fat32_->ReadSector(p1, buffer);
+      displayMemory(buffer, p2);
+      break;
+    }
+    case 'P':
+    {
+      fat32_->ReadPartitions();
+      break;
+    }
+    case 'F':
+    {
+      uint32_t sz = fat32_->GetFileSize((uint8_t*)param1);
+      uint8_t* bytes;
+      
+      bytes = new uint8_t[sz];
+      fat32_->ReadFile((uint8_t*)param1, bytes, sz);
+      
+      //displayMemory(bytes, sz);
+      printf("\n");
+      for(int x=0;x<sz;x++)
+	printf("%c",bytes[x]);
+      delete [] bytes;
+      break;
+    }
+    case 'D':
+    {
+      int p1 = htoi(param1);
+      fat32_->ReadDirectory(p1);
+      break;
+    }
+    case 'L':
+    {
+	int fstatus = 0;
+	fstatus = fat32_->OpenFile(1, (uint8_t*)param1, FILEACCESSMODE_READ);
+	if(fstatus == FILE_STATUS_OK)
+	{
+	  uint16_t m = htoi(param2);
+	  uint8_t b;
+	  int ctr = 0;
+	  
+	  fstatus = fat32_->ReadNextFileByte(1, &b);
+	  
+	  while(fstatus != FILE_STATUS_EOF)
+	  {
+	    mem_->write_byte(m+ctr, b);
+	    ctr++;
+	    fstatus = fat32_->ReadNextFileByte(1, &b);
+	  }
+	  fat32_->CloseFile(1);
+	  printf("\n%d bytes written to %04X - %04X", ctr, m, m+ctr); 
+	}
+	printf("\nstatus=%d", fstatus);
+	break;
+    }
+    case 'J':
+    {
+      int fstatus = 0;
+      fstatus = fat32_->OpenFile(1, (uint8_t*)param1, FILEACCESSMODE_CREATE);
+      char msg[50] = "SBCDEFGHIJKLMNOPQRSTUVWXYZ1234567890AAABBBCCCDDDD";
+      uint8_t msgCtr = 0;
+      if(fstatus == FILE_STATUS_OK)
+      {
+	while(fstatus == FILE_STATUS_OK && msgCtr < 47)
+	{
+	  fstatus = fat32_->WriteNextFileByte(1,msg[msgCtr++]);
+	}
+
+	fat32_->CloseFile(1);
+      }
+      printf("\nstatus=%d",fstatus);
+      break;
+    }
+    case 'B':
+    {
+      uint32_t startingCluster = 0;
+      int fstatus = fat32_->AllocateCluster(&startingCluster); 
       break;
     }
     case 'M':

@@ -98,6 +98,9 @@ void Memory::setup_memory_banks(uint8_t v)
   
   for(uint16_t i=2; i < 4225; i++)
     mem_ram_[36864+(i-2)] = micromon[i];
+  
+  //for(uint16_t i=2; i < g_myData_Size; i++)
+  //  mem_ram_[49152+(i-2)] = g_myData[i];
 }
 
 /**
@@ -148,7 +151,7 @@ void Memory::write_byte(uint16_t addr, uint8_t v)
   }
   /* default */
   else
-  {
+  {   
     mem_ram_[addr] = v;
   }
 }

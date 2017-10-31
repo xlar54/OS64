@@ -43,6 +43,9 @@ IO::IO()
   mode = 0;
   retval_ = true;
   //prev_frame_was_at_ = std::chrono::high_resolution_clock::now();
+  
+  //AdvancedTechnologyAttachment ata0m(true, _ATA_FIRST);
+  //Fat32 fat32(&ata0m,0);
 }
 
 IO::~IO()
@@ -86,7 +89,71 @@ void IO::init_color_palette()
 
 bool IO::emulate()
 {
-  return retval_;
+    // FAT32 hook
+    uint8_t fat32cmd;
+    fat32cmd =  mem_->read_byte(0x02);
+    
+    switch (fat32cmd)  
+    {
+      // load directory
+      case 0x01:
+      {
+	mem_->write_byte(0x02,0);
+	
+	int zeroCtr=0;
+	int bPos = 0;
+	uint16_t startOfBasic = 0x0801;
+	
+	uint8_t* dir = fat32_->GetCBMDir();
+	
+	while (zeroCtr < 3)
+	{
+	  mem_->write_byte(startOfBasic + bPos, dir[bPos]);
+	  
+	  if(dir[bPos] == 0)
+	    zeroCtr++;
+	  else
+	    zeroCtr=0;
+	  
+	  bPos++;
+	}
+	break;
+      }
+      case 0x02:
+      {
+	mem_->write_byte(0x02,0);
+	fat32_->WriteDir((uint8_t*)"G2345678", (uint8_t*)"EXT", 270);
+	break;
+      }
+      case 0x03:
+      {
+	mem_->write_byte(0x02,0);
+	int fstatus = 0;
+	fstatus = fat32_->OpenFile(1, (uint8_t*)"FDCONFIG.SYS", FILEACCESSMODE_READ);
+	if(fstatus == FILE_STATUS_OK)
+	{
+	  uint16_t m = 49152;
+	  uint8_t b;
+	  int ctr = 0;
+	  
+	  fstatus = fat32_->ReadNextFileByte(1, &b);
+	  
+	  while(fstatus != FILE_STATUS_EOF)
+	  {
+	    mem_->write_byte(m+ctr, b);
+	    ctr++;
+	    fstatus = fat32_->ReadNextFileByte(1, &b);
+	  }
+	  fat32_->CloseFile(1);
+	} 
+	break;
+      }
+      default:
+	break;
+    }
+    
+  
+  return retval_; 
 }
 
 void IO::process_events()

@@ -6,6 +6,11 @@
 #include <c64/io.h>
 #include <c64/cpu.h>
 #include <c64/memory.h>
+#include <drivers/ata.h>
+#include <filesystem/fat.h>
+
+using namespace myos::hardwarecommunication;
+using namespace myos::filesystem;
 
 /* forward declarations */
 
@@ -30,6 +35,7 @@ class Monitor
     void prompt();
     void help();
     void process_cmd();
+    Fat32 *fat32_;
   public:
     Monitor();
     ~Monitor();
@@ -38,6 +44,7 @@ class Monitor
     void vic(Vic *v){vic_ = v;};
     void cia1(Cia1 *v){cia1_ = v;};
     void cia2(Cia2 *v){cia2_ = v;};
+    void fat32(Fat32 *m) { fat32_ = m; };
     void Run();
     void OnKeyDown(uint8_t c);
 };
