@@ -34,6 +34,7 @@ Fat32::Fat32(myos::drivers::AdvancedTechnologyAttachment *hd, uint8_t partition)
     openFilesList[x].locationPtr = 0;
     openFilesList[x].startingCluster = 0;
     openFilesList[x].buffer = 0;
+    openFilesList[x].fileBuffer = Vector<uint8_t>(_bpb.sectorsPerCluster * _bpb.bytesPerSector);
   }
   
   LoadFAT();
@@ -65,8 +66,9 @@ void Fat32::ReadPartitions()
     printf("         %02X\n", _mbr.primaryPartition[t].partition_id);
   }
   
-    
-  printf("\nFAT Start          : %06X", _fatStart);
+  printf("\nBytes per sector   : %d", _bpb.bytesPerSector);
+  printf("\nSectors per cluster: %d", _bpb.sectorsPerCluster);  
+  printf("\n\nFAT Start          : %06X", _fatStart);
   printf("\nData Start         : %06X", _dataStart);
   printf("\nRoot cluster       : %06X", _bpb.rootCluster);
   printf("\nRoot directory     : %06X", _rootStart); 
@@ -361,8 +363,7 @@ int Fat32::OpenFile(uint8_t filenumber, uint8_t* filename, uint8_t mode)
     openFilesList[filenumber].size = 0;
     openFilesList[filenumber].locationPtr = 0;
     openFilesList[filenumber].startingCluster = 0;
-    openFilesList[filenumber].buffer = new uint8_t[_bpb.sectorsPerCluster * 512]; //buf = 1 cluster size
-    
+
     CreateDirectoryEntry(filename, ext, 0);
     
     return FILE_STATUS_OK;
@@ -407,16 +408,14 @@ int Fat32::FlushWriteBuffer(uint8_t filenumber)
 
   if (openFilesList[filenumber].startingCluster == 0)
     openFilesList[filenumber].startingCluster = freeCluster;
-
+  
   uint32_t sector = _dataStart + _bpb.sectorsPerCluster * (freeCluster-2);
 
-  for(int x=0;x<_bpb.sectorsPerCluster;x++)
-    _hd->WriteSector(sector+x, &openFilesList[filenumber].buffer[512*x], 512);
+  uint8_t* buf = &openFilesList[filenumber].fileBuffer[0];
   
-  // clear the buffer
-  delete [] openFilesList[filenumber].buffer;
-  openFilesList[filenumber].buffer = new uint8_t[_bpb.sectorsPerCluster * 512];
-    
+  for(int x=0;x<_bpb.sectorsPerCluster;x++)
+    _hd->WriteSector(sector+x, &buf[x*_bpb.bytesPerSector], _bpb.bytesPerSector);
+
   // reset pointer to start of buffer
   openFilesList[filenumber].locationPtr = 0;
 
@@ -558,14 +557,17 @@ int Fat32::WriteNextFileByte(uint8_t filenumber, uint8_t b)
   if(openFilesList[filenumber].mode != FILEACCESSMODE_WRITE)
     return FILE_STATUS_FILECLSD;
   
-  openFilesList[filenumber].buffer[openFilesList[filenumber].locationPtr] = b;
+  int capacity = openFilesList[filenumber].fileBuffer.capacity();
+  
+  // Expand buffer to size of another cluster if needed
+  if(openFilesList[filenumber].locationPtr == capacity)
+  {
+    openFilesList[filenumber].fileBuffer.resize(capacity + _bpb.sectorsPerCluster * _bpb.bytesPerSector);
+  }
+  
+  openFilesList[filenumber].fileBuffer[openFilesList[filenumber].locationPtr] = b;
   openFilesList[filenumber].locationPtr++;
   openFilesList[filenumber].size++;
-  
-  if(openFilesList[filenumber].locationPtr > _bpb.sectorsPerCluster * 512)
-  {
-    FlushWriteBuffer(filenumber);
-  }
   
   return FILE_STATUS_OK;
 }
@@ -952,4 +954,111 @@ void Fat32::CreateDirectoryEntry(uint8_t* filename, uint8_t* ext, uint32_t size)
 
     buffer = ReadNextSectorInChain(0);
   }  
+}
+
+int Fat32::DeleteFile(uint8_t* filename)
+{
+  _endOfChain = 0;
+
+  uint8_t file8[8], ext[3];
+  ParseFilename(filename, file8, ext);   
+  
+  // set this to filecluster to access a file or subdir
+  uint8_t *buffer = ReadNextSectorInChain(_bpb.rootCluster);
+
+  while (_endOfChain == 0)
+  {  
+    DirectoryEntryFat32 dirent[16];
+    
+    for(int entry=0;entry<16;entry++)
+	dirent[entry] = *(DirectoryEntryFat32*)(buffer+(sizeof(DirectoryEntryFat32)*entry));
+    
+    for(int i=0;i<16;i++)
+    {
+      if(dirent[i].name[0] == file8[0] 
+	&& dirent[i].name[1] == file8[1]
+	&& dirent[i].name[2] == file8[2] 
+	&& dirent[i].name[3] == file8[3]
+	&& dirent[i].name[4] == file8[4]
+	&& dirent[i].name[5] == file8[5]
+	&& dirent[i].name[6] == file8[6]
+	&& dirent[i].name[7] == file8[7]
+	&& dirent[i].ext[0] == ext[0]
+	&& dirent[i].ext[1] == ext[1]
+	&& dirent[i].ext[2] == ext[2]
+      )
+      {
+	uint8_t *ptr;
+	ptr = &buffer[i*sizeof(DirectoryEntryFat32)];
+		
+	ptr[0] = 0xE5;	// First byte of filename set to 0xE5 to indicate deleted
+
+	_hd->WriteSector(_lastSectorRead, buffer, 512);
+	
+	return FILE_STATUS_OK;
+      }
+
+    }
+
+    buffer = ReadNextSectorInChain(0);
+  } 
+  
+  return FILE_STATUS_NOTFOUND;
+}
+
+int Fat32::RenameFile(uint8_t* currentFilename, uint8_t* newFilename)
+{
+  _endOfChain = 0;
+
+  uint8_t file8[8], ext[3];
+  ParseFilename(currentFilename, file8, ext);   
+  
+  uint8_t newfile8[8], newext[3];
+  ParseFilename(newFilename, newfile8, newext);  
+  
+  // set this to filecluster to access a file or subdir
+  uint8_t *buffer = ReadNextSectorInChain(_bpb.rootCluster);
+
+  while (_endOfChain == 0)
+  {  
+    DirectoryEntryFat32 dirent[16];
+    
+    for(int entry=0;entry<16;entry++)
+	dirent[entry] = *(DirectoryEntryFat32*)(buffer+(sizeof(DirectoryEntryFat32)*entry));
+    
+    for(int i=0;i<16;i++)
+    {
+      if(dirent[i].name[0] == file8[0] 
+	&& dirent[i].name[1] == file8[1]
+	&& dirent[i].name[2] == file8[2] 
+	&& dirent[i].name[3] == file8[3]
+	&& dirent[i].name[4] == file8[4]
+	&& dirent[i].name[5] == file8[5]
+	&& dirent[i].name[6] == file8[6]
+	&& dirent[i].name[7] == file8[7]
+	&& dirent[i].ext[0] == ext[0]
+	&& dirent[i].ext[1] == ext[1]
+	&& dirent[i].ext[2] == ext[2]
+      )
+      {
+	uint8_t *ptr;
+	ptr = &buffer[i*sizeof(DirectoryEntryFat32)];
+		
+	for(int x=0;x<8;x++)
+	  *ptr++ = newfile8[x];
+	
+	for(int x=0;x<3;x++)
+	  *ptr++ = newext[x];
+
+	_hd->WriteSector(_lastSectorRead, buffer, 512);
+	
+	return FILE_STATUS_OK;
+      }
+
+    }
+
+    buffer = ReadNextSectorInChain(0);
+  } 
+  
+  return FILE_STATUS_NOTFOUND;
 }

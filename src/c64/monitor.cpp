@@ -81,6 +81,8 @@ void Monitor::help()
   printf("F - Read File (F <filename>)\n");
   printf("S - Sector Display (S sectorNumInHex #bytesInDec)\n");
   printf("D - Directory (ATA FAT32 Harddisk Master 0)\n");
+  printf("E - Erase (delete) file\n");
+  printf("N - ReName a file\n");
   printf("L - Load file to RAM (L FILENAME.EXT C000)\n");
   printf("W - Write RAM to file (W FILENAME.EXT C000 C1FF)\n");
   printf("ESC - Return to system\n");
@@ -200,6 +202,10 @@ void Monitor::process_cmd()
 	if(fstatus == FILE_STATUS_OK)
 	{
 	  uint16_t m = htoi(param2);
+	  
+	  if(m == 0)
+	    m = 0x800;
+	  
 	  uint8_t b;
 	  int ctr = 0;
 	  
@@ -212,10 +218,30 @@ void Monitor::process_cmd()
 	    fstatus = fat32_->ReadNextFileByte(1, &b);
 	  }
 	  fat32_->CloseFile(1);
+	  
+	  // tell basic where program ends (after 3 zeros)
+	  mem_->write_byte(45, (m+ctr) & 0xFF); // poke low byte to 45
+	  mem_->write_byte(46, (m+ctr) >> 8); // poke hi byte to 46
+	  
+	  
 	  printf("\n%d bytes written to %04X - %04X", ctr, m, m+ctr); 
 	}
 	printf("\nstatus=%d", fstatus);
 	break;
+    }
+    case 'E':
+    {
+      int fstatus = 0;
+      fstatus = fat32_->DeleteFile((uint8_t*)param1);
+      printf("\nstatus=%d",fstatus);
+      break;
+    }
+    case 'N':
+    {
+      int fstatus = 0;
+      fstatus = fat32_->RenameFile((uint8_t*)param1, (uint8_t*)param2);
+      printf("\nstatus=%d",fstatus);
+      break;
     }
     case 'J':
     {
@@ -241,11 +267,25 @@ void Monitor::process_cmd()
       uint16_t mStart = htoi(param2);
       uint16_t mEnd = htoi(param3);
       
-      if(mStart > mEnd)
+      if(mStart == 0)
       {
-	printf("\n%04X > %04X", mStart, mEnd);
-	return;
+	mStart = 0x800;
       }
+      
+      if(mEnd > 0)
+      {
+	if(mStart >= mEnd)
+	{
+	  printf("\n%04X >= %04X", mStart, mEnd);
+	  return;
+	}
+      }
+      
+      uint8_t eobLo = mem_->read_byte(45);
+      uint8_t eobHi = mem_->read_byte(46);
+      
+      if(mEnd ==0)
+	mEnd = (eobHi << 8) + eobLo;
       
       fstatus = fat32_->OpenFile(1, (uint8_t*)param1, FILEACCESSMODE_CREATE);
       
