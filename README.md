@@ -1,5 +1,7 @@
-# emudore64
-Commodore 64 native emulator operating system for the x86 PC
+# OS64
+Commodore 64 native emulator operating system for the x86 PC. Formerly called Emudore 64.
+
+* Check out the project blog at: https://os64.blogspot.com/
 
 WHAT:
 
@@ -10,16 +12,17 @@ it up with a C64 emulator as the kernel.
 
 STATUS:
 
-There is so much wrong with this code that it isn't even funny.  But it works as a proof
-of concept.  I would very much like to see this as a fully operational OS. If
-you are good at emulation, C++, and OS development, please take a look.
+Emulation is pretty good but the primary focus at the present is accessing the machine's harddrive, getting
+proper keyboard, support, etc.
 
 DEMO:
 
 As a working demo, just burn the iso to a CD-ROM, and boot it up, or use something like rufus to convert
 to a bootable flash drive.  You should quickly be seeing the ol' C64 screen. Attach an IDE ATA drive (primary
 master), formatted to FAT32, and you should be able to load and save to drive 8.  This does not currently 
-work with AHCI SATA drives.
+work with AHCI SATA drives.  The ESC key should take you to a screen which lets to manage the drive and other
+things Im adding as a need arises.  This screen is subject to change a great deal as its primarily meant to be
+used for testing.
 
 TO DO:
  * Proper keycode scanning - right now we are just injecting into the keyboard buffer
