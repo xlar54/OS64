@@ -25,7 +25,7 @@ Fat32::Fat32(myos::drivers::AdvancedTechnologyAttachment *hd, uint8_t partition)
   _fatBuffer = new uint8_t[_bpb.sectorsPerFat * _bpb.bytesPerSector];  
   _fat = &_fatBuffer[0];
   
-  for(int x=0;x<256;x++)
+  for(int x=0;x<MAX_CBM_FILES_OPEN;x++)
   {
     openFilesList[x].mode = FILEACCESSMODE_CLOSED;
     for(int x1=0;x1<8;x1++) openFilesList[x].filename[x1] = 0; 
@@ -363,6 +363,9 @@ int Fat32::OpenFile(uint8_t filenumber, uint8_t* filename, uint8_t mode)
     openFilesList[filenumber].size = 0;
     openFilesList[filenumber].locationPtr = 0;
     openFilesList[filenumber].startingCluster = 0;
+    
+    uint8_t* buffer = new uint8_t[_bpb.sectorsPerCluster* _bpb.bytesPerSector];
+    openFilesList[filenumber].buffer = buffer;
 
     CreateDirectoryEntry(filename, ext, 0);
     
@@ -411,7 +414,8 @@ int Fat32::FlushWriteBuffer(uint8_t filenumber)
   
   uint32_t sector = _dataStart + _bpb.sectorsPerCluster * (freeCluster-2);
 
-  uint8_t* buf = &openFilesList[filenumber].fileBuffer[0];
+  //uint8_t* buf = &openFilesList[filenumber].fileBuffer[0];
+  uint8_t* buf = &openFilesList[filenumber].buffer[0];
   
   for(int x=0;x<_bpb.sectorsPerCluster;x++)
     _hd->WriteSector(sector+x, &buf[x*_bpb.bytesPerSector], _bpb.bytesPerSector);
@@ -557,15 +561,19 @@ int Fat32::WriteNextFileByte(uint8_t filenumber, uint8_t b)
   if(openFilesList[filenumber].mode != FILEACCESSMODE_WRITE)
     return FILE_STATUS_FILECLSD;
   
-  int capacity = openFilesList[filenumber].fileBuffer.capacity();
+  //int capacity = openFilesList[filenumber].fileBuffer.capacity();
   
   // Expand buffer to size of another cluster if needed
-  if(openFilesList[filenumber].locationPtr == capacity)
-  {
-    openFilesList[filenumber].fileBuffer.resize(capacity + _bpb.sectorsPerCluster * _bpb.bytesPerSector);
-  }
+  //if(openFilesList[filenumber].locationPtr == capacity)
+  //{
+  //  openFilesList[filenumber].fileBuffer.resize(capacity + _bpb.sectorsPerCluster * _bpb.bytesPerSector);
+  //}
   
-  openFilesList[filenumber].fileBuffer[openFilesList[filenumber].locationPtr] = b;
+  //openFilesList[filenumber].fileBuffer[openFilesList[filenumber].locationPtr] = b;
+  
+  openFilesList[filenumber].buffer[openFilesList[filenumber].locationPtr]=b;
+  
+  
   openFilesList[filenumber].locationPtr++;
   openFilesList[filenumber].size++;
   
@@ -940,13 +948,9 @@ void Fat32::CreateDirectoryEntry(uint8_t* filename, uint8_t* ext, uint32_t size)
 	*ptr++ = (size >> (8*2)) & 0xff;
 	*ptr = (size >> (8*3)) & 0xff;
 	
-	//displayMemory(buffer, 256);
-	
+
 	_hd->WriteSector(_lastSectorRead, buffer, 512);
-	
-	 //uint32_t sector = _dataStart + _bpb.sectorsPerCluster * (startingCluster-2);
-	 //printf("writing to sector %06X", sector);
-	//_hd->WriteSector(sector, (uint8_t*)"TEST", 4);
+
 	return;
       }
 

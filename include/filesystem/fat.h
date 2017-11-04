@@ -31,6 +31,7 @@ using namespace myos::drivers;
 #define FILE_STATUS_FILEEXISTS	0x06
 #define FILE_STATUS_DISKFULL	0x07
 
+#define MAX_CBM_FILES_OPEN	0x0A
 
 namespace myos
 {
@@ -130,7 +131,7 @@ namespace myos
       uint32_t size;
       uint32_t locationPtr;
       uint8_t* buffer;
-      Vector<uint8_t> fileBuffer;
+      //Vector<uint8_t> fileBuffer;
       uint32_t startingCluster;
     };
 
@@ -151,7 +152,7 @@ namespace myos
 	
 	void LoadFAT();
 	uint8_t* ReadNextSectorInChain(uint32_t startOfChain);
-	struct FileStatus openFilesList[256];
+	struct FileStatus openFilesList[MAX_CBM_FILES_OPEN];
 
 	
     public:

@@ -277,7 +277,7 @@ void Monitor::process_cmd()
 	if(mStart >= mEnd)
 	{
 	  printf("\n%04X >= %04X", mStart, mEnd);
-	  return;
+	  break;
 	}
       }
       
