@@ -194,11 +194,13 @@ void vga_gfx_clear(int color)
 
 void vga_put_pixel(int x, int y, uint8_t color)
 {
-  unsigned short offset = (y<<8) + (y<<6) + x;
-  
+  //unsigned short offset = (y<<8) + (y<<6) + x;
   //*(vga_framebuffer_segment + offset) = color;
-  uint8_t* address = gfxVideoRAM + vga_mode_width * y + x;
-  *address = (uint8_t) color;
+  
+  //uint8_t* address = gfxVideoRAM + vga_mode_width * y + x;
+  //*address = (uint8_t) color;
+  
+  *(uint8_t*)(gfxVideoRAM + vga_mode_width * y + x) = (uint8_t) color;
 };
 
 void vga_draw_rect(int x, int y, int n, uint8_t color)

@@ -95,7 +95,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
 {
     vga_set_mode(80,25,16);
   
-    printf("Emudore 64 Operating System Starting...\n");
+    printf("OS/64 Operating System Starting...\n");
  
     GlobalDescriptorTable gdt;
     
@@ -106,19 +106,14 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     size_t heap = 10*1024*1024;
     MemoryManager memoryManager(heap, (*memupper)*1024 - heap - 10*1024);
     
-    printf("heap: 0x%08X", heap);
+    printf("\n%d Byte Heap @ 0x%08X", heap);
     printf("\n\n");
     
     // How to use memorymanager to allocate dynamic memory from the heap
-    //uint16_t *ram1 = (uint16_t *) memoryManager.malloc(65535);
-    //printf("\n64KB RAM BANK 1: 0x");
-    //printfHex(((size_t)ram1 >> 24) & 0xFF);
-    //printfHex(((size_t)ram1 >> 16) & 0xFF);
-    //printfHex(((size_t)ram1 >> 8 ) & 0xFF);
-    //printfHex(((size_t)ram1      ) & 0xFF);
-    //
-    
-    
+    //uint8_t *ram1 = (uint8_t *) memoryManager.malloc(65535);
+    //uint8_t* ram1 = new uint8_t[65535];
+    //printf("\n64KB RAM BANK 1: %06X", ram1);
+       
     TaskManager taskManager;
     
     InterruptManager interrupts(0x20, &gdt, &taskManager);
@@ -153,11 +148,11 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     AdvancedTechnologyAttachment ata1s(false, _ATA_SECOND);  
     ata1s.Identify();
     
-    uint32_t s1 = 0x0FFFFFFE;
+    //uint32_t s1 = 0x0FFFFFFE;
     //s1 = 0;
-    ata0m.WriteSector(s1, (uint8_t*)"LBA48-Z", 7);  
-    ata0m.WriteSector(s1+1, (uint8_t*)"LBA48-V", 7);
-    ata0m.WriteSector(s1+2, (uint8_t*)"LBA48-O", 7);
+    //ata0m.WriteSector(s1, (uint8_t*)"LBA48-Z", 7);  
+    //ata0m.WriteSector(s1+1, (uint8_t*)"LBA48-V", 7);
+    //ata0m.WriteSector(s1+2, (uint8_t*)"LBA48-O", 7);
     
     /*
     uint8_t buffer[512];
@@ -176,8 +171,9 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     //displayMemory(sector, 512);
     
+    printf("\n\nInitializing filesystem driver...");
     Fat32 fat32(&ata0m,0);
-    
+    printf("[OK]\n");
 
     //fat32.ReadPartitions();
     //fat32.ReadDir();

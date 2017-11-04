@@ -49,6 +49,9 @@ class IO
 
     Fat32 *fat32_;
     
+    uint8_t *vgaMem;		// pointer to the offset of VGA memory
+    uint8_t vscreen[320*200];	// pointer to the offset of virtual screen.
+        
   public:
     IO();
     ~IO();
@@ -68,10 +71,19 @@ class IO
     void handle_keyup();
     void type_character(char c);
     inline uint8_t keyboard_matrix_row(int col){return keyboard_matrix_[col];};
-    inline void screen_update_pixel(int x, int y, int color) { vga_put_pixel(x, y,color); };
-    inline void screen_draw_rect(int x, int y, int n, uint8_t color) { vga_draw_rect(x, y, n, color); };
+    inline void screen_draw_rect(int x, int y, int n, uint8_t color) {
+      for(int i=0; i < n ; i++)
+	*(vscreen + 320 * y + x + i) = color;
+    };
     inline void screen_draw_border(int y, int color) { vga_draw_rect(0, y, cols_, color); };
-    void screen_refresh();
+    inline void screen_refresh() {
+      //memcpy(vgaMem,vscreen,size_t(320*200));
+      for(int x=0;x<64000;x+=4)
+	*(uint32_t*)(vgaMem+x) = *(uint32_t*)(vscreen+x);
+    }
+    inline void screen_update_pixel(int x, int y, int color) { 
+      *(vscreen + 320 * y + x) = (uint8_t) color;
+    };
 };
 
 #endif

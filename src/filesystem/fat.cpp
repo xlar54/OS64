@@ -34,7 +34,7 @@ Fat32::Fat32(myos::drivers::AdvancedTechnologyAttachment *hd, uint8_t partition)
     openFilesList[x].locationPtr = 0;
     openFilesList[x].startingCluster = 0;
     openFilesList[x].buffer = 0;
-    openFilesList[x].fileBuffer = Vector<uint8_t>(_bpb.sectorsPerCluster * _bpb.bytesPerSector);
+    //openFilesList[x].fileBuffer = Vector<uint8_t>(_bpb.sectorsPerCluster * _bpb.bytesPerSector);
   }
   
   LoadFAT();

@@ -96,11 +96,21 @@ void Memory::setup_memory_banks(uint8_t v)
   //for(uint16_t i=2; i < 4099; i++)
   //  mem_ram_[49152+(i-2)] = monitorC000[i];
   
-  for(uint16_t i=2; i < 4225; i++)
-    mem_ram_[36864+(i-2)] = micromon[i];
+  //for(uint16_t i=2; i < 4225; i++)
+  //  mem_ram_[36864+(i-2)] = micromon[i];
   
   //for(uint16_t i=2; i < g_myData_Size; i++)
   //  mem_ram_[49152+(i-2)] = g_myData[i];
+  
+  //uint16_t hack = 0xF4A5; // kernel load
+  //uint16_t hack = 0xE175; // basic load
+  uint16_t hack = 0xF4C4;
+  //kernel hack for ide drive access
+  mem_rom_[hack++] = 0xA9; mem_rom_[hack++] = 0x04;				// LDA #$04
+  mem_rom_[hack++] = 0x8D; mem_rom_[hack++] = 0x02; mem_rom_[hack++] = 0x00;	// STA $0002
+  mem_rom_[hack++] = 0x20; mem_rom_[hack++] = 0xD2; mem_rom_[hack++] = 0xF5;	// JSR $F5D2
+  mem_rom_[hack++] = 0x18;							// CLC
+  mem_rom_[hack++] = 0x60;							// RTS
 }
 
 /**

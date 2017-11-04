@@ -46,6 +46,8 @@ IO::IO()
   
   //AdvancedTechnologyAttachment ata0m(true, _ATA_FIRST);
   //Fat32 fat32(&ata0m,0);
+  
+  vgaMem = (uint8_t*) 0xA0000;
 }
 
 IO::~IO()
@@ -148,6 +150,93 @@ bool IO::emulate()
 	} 
 	break;
       }
+      case 0x04:
+      {
+	mem_->write_byte(0x02,0);	// clear command byte
+	
+	int fstatus = 0;
+	
+	uint8_t filenameLength = mem_->read_byte(0xB7);
+	uint8_t secondaryAddr = mem_->read_byte(0xB9);
+	uint8_t deviceNum = mem_->read_byte(0xBA);
+	uint8_t filenamePtrLo = mem_->read_byte(0xBB);
+	uint8_t filenamePtrHi = mem_->read_byte(0xBC);
+		
+	uint16_t filenamePtr = (filenamePtrHi << 8) + (filenamePtrLo & 0xFF);
+	uint16_t loadAddress = 0x800;
+	uint16_t m = 0;
+	uint8_t filenameBuffer[13]="        .PRG";
+
+	for(int z=0;z<filenameLength; z++)
+	{
+	  filenameBuffer[z] = mem_->read_byte(filenamePtr+z);
+	}
+	
+	// if $ is filename, load directory
+	if (filenameBuffer[0] == '$' && filenameLength == 1)
+	{
+	  int zeroCtr=0;
+	  int bPos = 0;
+	  uint16_t startOfBasic = 0x0801;
+	  
+	  uint8_t* dir = fat32_->GetCBMDir();
+	  
+	  while (zeroCtr < 3)
+	  {
+	    mem_->write_byte(startOfBasic + bPos, dir[bPos]);
+	    
+	    if(dir[bPos] == 0)
+	      zeroCtr++;
+	    else
+	      zeroCtr=0;
+	    
+	    bPos++;
+	  }
+	  
+	  break;
+	}
+	  
+	
+	fstatus = fat32_->OpenFile(1, (uint8_t*)filenameBuffer, FILEACCESSMODE_READ);
+	if(fstatus == FILE_STATUS_OK)
+	{
+	  if(secondaryAddr == 0)
+	    m = loadAddress;
+	  
+	  uint8_t b;
+	  int ctr = 0;
+	  
+	  fstatus = fat32_->ReadNextFileByte(1, &b);
+	  
+	  while(fstatus != FILE_STATUS_EOF)
+	  {
+	    // used as in LOAD"..",8,1  which means use 1st two bytes to determine load location
+	    if(secondaryAddr == 1)
+	    {
+	      m = b;
+	      fat32_->ReadNextFileByte(1, &b);
+	      m = (b << 8) + (m & 0xFF);
+	      secondaryAddr = 0;
+	    }
+	    else
+	    {
+	      mem_->write_byte(m+ctr, b);
+	      ctr++;
+	      fstatus = fat32_->ReadNextFileByte(1, &b);
+	    }
+	  }
+	  fat32_->CloseFile(1);
+	  
+	  // tell basic where program ends (after 3 zeros)
+	  mem_->write_byte(45, (m+ctr) & 0xFF); // poke low byte to 45
+	  mem_->write_byte(46, (m+ctr) >> 8); // poke hi byte to 46
+	  
+	  
+	  //printf("\n%d bytes written to %04X - %04X", ctr, m, m+ctr); 
+	}
+	//printf("\nstatus=%d", fstatus);
+	break;
+      }
       default:
 	break;
     }
@@ -230,14 +319,15 @@ void IO::type_character(char c)
 
 }
 
-void IO::screen_refresh()
+/*void IO::screen_refresh()
 {
-  /* process SDL events once every frame */
+  // process SDL events once every frame 
   //process_events();
-  /* perform vertical refresh sync */
-  vsync();
-}
+  // perform vertical refresh sync 
 
+  
+  vsync();
+}*/
 
 void IO::vsync()
 {
