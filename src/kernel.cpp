@@ -60,9 +60,16 @@ public:
       switch(mode)
       {
 	case 0:
+	  // Translate key for CBM emulation
+	  if (c == 0xFF)
+	  {
+	    c64ptr->mem_->write_byte(0x91, 0x7F);
+	    break;
+	  }
 	  c64ptr->io_->OnKeyDown(c);
 	  break;
 	case 1:
+	  // No translation
 	  c64ptr->io_->mon_->OnKeyDown(c);
 	  break;
       }

@@ -198,6 +198,13 @@ bool IO::emulate()
 	  
 	
 	fstatus = fat32_->OpenFile(1, (uint8_t*)filenameBuffer, FILEACCESSMODE_READ);
+	
+	if(fstatus == FILE_STATUS_NOTFOUND)
+	{
+	  mem_->write_byte(0x90,0x42);	// ST = $0x42 (66 dec)
+	  break;
+	}
+	
 	if(fstatus == FILE_STATUS_OK)
 	{
 	  if(secondaryAddr == 0)
@@ -284,6 +291,8 @@ void IO::OnKeyDown(uint8_t c)
 	  case 0x41: { c = 0x8B; break; } // F7
 	  case 0x42: { c = 0x8C; break; } // F8*/
 
+	  //case 0x38: { mem_->write_byte(0x91, 0x7F); break; } // runstop key
+	  
 	  case 0x13: { if (shift == 1) c = 0x93; else c= 0x13; break; } // home / clr home
 	  
 	  case 0x2A: { c = 0x00; shift=1; break; }

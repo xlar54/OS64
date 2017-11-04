@@ -93,8 +93,8 @@ void Memory::setup_memory_banks(uint8_t v)
   /* write the config to the zero page */
   write_byte_no_io(kAddrMemoryLayout, v);
   
-  //for(uint16_t i=2; i < 4099; i++)
-  //  mem_ram_[49152+(i-2)] = monitorC000[i];
+  for(uint16_t i=2; i < 4099; i++)
+    mem_ram_[49152+(i-2)] = monitorC000[i];
   
   //for(uint16_t i=2; i < 4225; i++)
   //  mem_ram_[36864+(i-2)] = micromon[i];
@@ -102,13 +102,23 @@ void Memory::setup_memory_banks(uint8_t v)
   //for(uint16_t i=2; i < g_myData_Size; i++)
   //  mem_ram_[49152+(i-2)] = g_myData[i];
   
-  //uint16_t hack = 0xF4A5; // kernel load
-  //uint16_t hack = 0xE175; // basic load
-  uint16_t hack = 0xF4C4;
   //kernel hack for ide drive access
+  uint16_t hack = 0xF4C4;	// KERNEL LOAD FROM SERIAL BUS (Starts at $F4B8)
+    
+  // Tell FAT32 driver to load a program
   mem_rom_[hack++] = 0xA9; mem_rom_[hack++] = 0x04;				// LDA #$04
   mem_rom_[hack++] = 0x8D; mem_rom_[hack++] = 0x02; mem_rom_[hack++] = 0x00;	// STA $0002
+  
+  // Check the STATUS byte.  Print FILE NOT FOUND if not found
+  mem_rom_[hack++] = 0xA5; mem_rom_[hack++] = 0x90;				// LDA $90
+  mem_rom_[hack++] = 0x4A;							// LSR
+  mem_rom_[hack++] = 0x4A;							// LSR
+  mem_rom_[hack++] = 0xB0; mem_rom_[hack++] = 0x61;				// BCS $F530 <=
+  
+  // Print LOADING
   mem_rom_[hack++] = 0x20; mem_rom_[hack++] = 0xD2; mem_rom_[hack++] = 0xF5;	// JSR $F5D2
+  
+  // END
   mem_rom_[hack++] = 0x18;							// CLC
   mem_rom_[hack++] = 0x60;							// RTS
 }

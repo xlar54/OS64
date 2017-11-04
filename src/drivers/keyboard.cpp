@@ -134,7 +134,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
             case 0x35: handler->OnKeyDown('/'); break;
 	    case 0x36: handler->OnKeyDown(0x2A); break; // RIGHTSHIFT (just sending the same as left for now)
 	    case 0x37: handler->OnKeyDown('*'); break;
-	    //case 0x38: handler->OnKeyDown(LEFTALT); break;
+	    case 0x38: handler->OnKeyDown(0xFF); break; //LEFT ALT
             case 0x39: handler->OnKeyDown(' '); break;
 	    //case 0x3A: handler->OnKeyDown(CAPSLOCK); break;
 	    case 0x3B: handler->OnKeyDown(0x3B); break; //F1
@@ -162,7 +162,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	    case 0x51: handler->OnKeyDown('3'); break;
 	    case 0x52: handler->OnKeyDown('0'); break;
 	    case 0x53: handler->OnKeyDown('.'); break;
-	    //case 0x57: handler->OnKeyDown(F11); break;
+	    //case 0x57: handler->OnKeyDown(0x57); break;	// F11
 	    //case 0x58: handler->OnKeyDown(F12); break;
 
             /*default:
