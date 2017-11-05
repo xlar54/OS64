@@ -20,7 +20,7 @@ Monitor::~Monitor()
 
 void Monitor::Run()
 {
-  printf("Emudore 64 - ML Monitor:\n\n");
+  printf("OS/64 - Debugging:\n\n");
   printf("====================================================\n");
   help();
   

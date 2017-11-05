@@ -120,6 +120,28 @@ void Memory::setup_memory_banks(uint8_t v)
   
   // END
   mem_rom_[hack++] = 0x18;							// CLC
+  mem_rom_[hack++] = 0xA6; mem_rom_[hack++] = 0xAE;				// LDX $AE
+  mem_rom_[hack++] = 0xA4; mem_rom_[hack++] = 0xAF;				// LDY $AF
+  mem_rom_[hack++] = 0x60;							// RTS
+  
+  
+  hack = 0xF605;	// KERNEL SAVE TO SERIAL BUS (Starts at $F4B8)
+    
+  // Tell FAT32 driver to load a program
+  mem_rom_[hack++] = 0xA9; mem_rom_[hack++] = 0x05;				// LDA #$05
+  mem_rom_[hack++] = 0x8D; mem_rom_[hack++] = 0x02; mem_rom_[hack++] = 0x00;	// STA $0002
+  
+  // Check the STATUS byte.  Print FILE NOT FOUND if not found
+  /*mem_rom_[hack++] = 0xA5; mem_rom_[hack++] = 0x90;				// LDA $90
+  mem_rom_[hack++] = 0x4A;							// LSR
+  mem_rom_[hack++] = 0x4A;							// LSR
+  mem_rom_[hack++] = 0xB0; mem_rom_[hack++] = 0x61;				// BCS $F530 <=
+  
+  // Print LOADING
+  mem_rom_[hack++] = 0x20; mem_rom_[hack++] = 0xD2; mem_rom_[hack++] = 0xF5;	// JSR $F5D2*/
+  
+  // END
+  mem_rom_[hack++] = 0x18;							// CLC
   mem_rom_[hack++] = 0x60;							// RTS
 }
 

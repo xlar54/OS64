@@ -580,13 +580,8 @@ int Fat32::WriteNextFileByte(uint8_t filenumber, uint8_t b)
   return FILE_STATUS_OK;
 }
 
-uint8_t* Fat32::GetCBMDir()
-{
-  static uint8_t buf[1000];
-  
-  for(int t=0;t<1000;t++)
-    buf[t] = 0;
-  
+uint16_t Fat32::GetCBMDir(uint8_t* buf)
+{ 
   uint16_t startOfBasic = 0x0801;
   uint16_t nextLinePtr = 30;
   
@@ -733,9 +728,12 @@ uint8_t* Fat32::GetCBMDir()
   // fix next line link ptr
   buf[tempNextLinePtr] = (startOfBasic + nextLinePtr) & 0xff;		// next link lo
   buf[tempNextLinePtr+1] = ((startOfBasic + nextLinePtr+1) >> 8) & 0xff;	// next link hi
+
+  buf[nextLinePtr++] = 0x00;
+  buf[nextLinePtr++] = 0x00;
+  buf[nextLinePtr++] = 0x00;
 	
-	
- return buf;
+  return nextLinePtr;
 }
 
 void Fat32::WriteDir(uint8_t* filename, uint8_t* ext, uint32_t size)

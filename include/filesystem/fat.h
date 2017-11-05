@@ -183,7 +183,7 @@ namespace myos
       
       void WriteDir(uint8_t* filename, uint8_t* ext, uint32_t size);
       
-      uint8_t* GetCBMDir();
+      uint16_t GetCBMDir(uint8_t *buffer);
      
       
     };

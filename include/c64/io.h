@@ -46,6 +46,8 @@ class IO
     /* vertical refresh sync */
     //std::chrono::high_resolution_clock::time_point prev_frame_was_at_;
     void vsync();
+    void load_file();
+    void save_file();
 
     Fat32 *fat32_;
     
