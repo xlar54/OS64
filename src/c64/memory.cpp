@@ -93,14 +93,17 @@ void Memory::setup_memory_banks(uint8_t v)
   /* write the config to the zero page */
   write_byte_no_io(kAddrMemoryLayout, v);
   
-  for(uint16_t i=2; i < 4099; i++)
-    mem_ram_[49152+(i-2)] = monitorC000[i];
+  //for(uint16_t i=2; i < 4099; i++)
+  //  mem_ram_[49152+(i-2)] = monitorC000[i];
   
   //for(uint16_t i=2; i < 4225; i++)
   //  mem_ram_[36864+(i-2)] = micromon[i];
   
   //for(uint16_t i=2; i < g_myData_Size; i++)
   //  mem_ram_[49152+(i-2)] = g_myData[i];
+  
+  //for (uint16_t i=0; i<3687;i++)
+  //  mem_ram_[0xc000 + i] = speed2_bin[i];
   
   //kernel hack for ide drive access
   uint16_t hack = 0xF4C4;	// KERNEL LOAD FROM SERIAL BUS (Starts at $F4B8)

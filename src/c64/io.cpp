@@ -23,29 +23,11 @@
 
 IO::IO()
 {  
-  cols_ = Vic::kVisibleScreenWidth;
-  rows_ = Vic::kVisibleScreenHeight;
-
-  /**
-   * unfortunately, we need to keep a copy of the rendered frame 
-   * in our own memory, there does not seem to be a way around 
-   * that would allow manipulating pixels straight on the GPU 
-   * memory due to how the image is internally stored, etc..
-   *
-   * The rendered frame gets uploaded to the GPU on every 
-   * screen refresh.
-   */
-  frame_  = new uint32_t[cols_ * rows_]();
   init_color_palette();
   init_keyboard();
-  next_key_event_at_ = 0;
   shift = 0;
   mode = 0;
   retval_ = true;
-  //prev_frame_was_at_ = std::chrono::high_resolution_clock::now();
-  
-  //AdvancedTechnologyAttachment ata0m(true, _ATA_FIRST);
-  //Fat32 fat32(&ata0m,0);
   
   vgaMem = (uint8_t*) 0xA0000;
 }
@@ -152,15 +134,10 @@ void IO::OnKeyDown(uint8_t c)
 	  case 0x40: { c = 0x86; break; } // F6
 	  case 0x41: { c = 0x8B; break; } // F7
 	  case 0x42: { c = 0x8C; break; } // F8*/
-
 	  //case 0x38: { mem_->write_byte(0x91, 0x7F); break; } // runstop key
 	  
-	  case 0x13: { if (shift == 1) c = 0x93; else c= 0x13; break; } // home / clr home
-	  
+	  case 0x13: { if (shift == 1) c = 0x93; else c= 0x13; break; } // home / clr home  
 	  case 0x2A: { c = 0x00; shift=1; break; }
-	  	  
-
-	  
 	}
 	if(c != 0x00)
 	{
@@ -189,16 +166,6 @@ void IO::type_character(char c)
 {
 
 }
-
-/*void IO::screen_refresh()
-{
-  // process SDL events once every frame 
-  //process_events();
-  // perform vertical refresh sync 
-
-  
-  vsync();
-}*/
 
 void IO::vsync()
 {
@@ -244,9 +211,7 @@ void IO::load_file()
     }
     
     // tell basic where program ends (after 3 zeros)
-    //mem_->write_byte(0x2D, (startAddress + size) & 0xFF); // poke low byte to 45
-    //mem_->write_byte(0x2E, (startAddress + size) >> 8); // poke hi byte to 46
-    
+    // regular kernel routines copy AE/AF to 2D/2E when done
     mem_->write_byte(0xAE, (startAddress + size) & 0xFF); // poke low byte to 45  
     mem_->write_byte(0xAF, (startAddress + size) >> 8); // poke hi byte to 46
     return;
@@ -266,32 +231,34 @@ void IO::load_file()
     uint8_t b;
     size = 0;
     
+    if(secondaryAddr == 1)
+    {
+      uint8_t lo = 0;
+      uint8_t hi = 0;
+      fstatus = fat32_->ReadNextFileByte(1, &lo);
+      fstatus = fat32_->ReadNextFileByte(1, &hi);
+      startAddress = (hi << 8) + (lo & 0xFF);	
+    }
+
     fstatus = fat32_->ReadNextFileByte(1, &b);
     
     while(fstatus != FILE_STATUS_EOF)
-    {
-      // used as in LOAD"..",8,1  which means use 1st two bytes to determine load location
-      if(secondaryAddr == 1)
-      {
-	uint8_t lo = b;
-	uint8_t hi = 0;
-	fat32_->ReadNextFileByte(1, &hi);
-	startAddress = (hi << 8) + (lo & 0xFF);
-	secondaryAddr = 0;
-      }
-      else
-      {
-	mem_->write_byte(startAddress+size, b);
-	size++;
-	fstatus = fat32_->ReadNextFileByte(1, &b);
-      }
+    {     
+      mem_->write_byte(startAddress+size, b);
+      size++;
+      
+      fstatus = fat32_->ReadNextFileByte(1, &b);
     }
     fat32_->CloseFile(1);
     
-    // tell basic where program ends (after 3 zeros)
-    mem_->write_byte(0xAE, (startAddress + size) & 0xFF); // poke low byte to 45  
-    mem_->write_byte(0xAF, (startAddress + size) >> 8); // poke hi byte to 46
+    if (secondaryAddr == 0)
+    {
+      // tell basic where program ends (after 3 zeros)
+      mem_->write_byte(0xAE, (startAddress + size) & 0xFF); // poke low byte to 45  
+      mem_->write_byte(0xAF, (startAddress + size) >> 8); // poke hi byte to 46
+    }
     
+    mem_->write_byte(0x90,0x40);		// ST = $0x40 (64 dec)
   }
 }
 
