@@ -105,8 +105,28 @@ void Memory::setup_memory_banks(uint8_t v)
   //for (uint16_t i=0; i<3687;i++)
   //  mem_ram_[0xc000 + i] = speed2_bin[i];
   
+  // keyboard modifications for keycode to match PC keyboard
+  uint16_t hack = 0xEB81;	// std keys
+  mem_rom_[hack+46] = 0x5B;	// PETSCII for [
+  mem_rom_[hack+49] = 0x5D;	// PETSCII for ]
+  mem_rom_[hack+50] = 0x27;	// PETSCII for '
+  mem_rom_[hack+45] = 0x3B;	// PETSCII for ;
+
+  
+  hack = 0xEBC2;		// shifted keys
+  mem_rom_[hack+59] = 0x40;	// PETSCII @ for SHIFT-2
+  mem_rom_[hack+19] = 0x5E;	// PETSCII & for SHIFT-6
+  mem_rom_[hack+24] = 0x26;	// PETSCII & for SHIFT-7
+  mem_rom_[hack+27] = 0x2A;	// PETSCII & for SHIFT-8
+  mem_rom_[hack+32] = 0x28;	// PETSCII & for SHIFT-9
+  mem_rom_[hack+35] = 0x29;	// PETSCII & for SHIFT-0
+  mem_rom_[hack+50] = 0x22;	// PETSCII for "
+  mem_rom_[hack+45] = 0x3A;	// PETSCII for :
+  mem_rom_[hack+53] = 0x2B;	// PETSCII for +
+  
+  
   //kernel hack for ide drive access
-  uint16_t hack = 0xF4C4;	// KERNEL LOAD FROM SERIAL BUS (Starts at $F4B8)
+  hack = 0xF4C4;	// KERNEL LOAD FROM SERIAL BUS (Starts at $F4B8)
     
   // Tell FAT32 driver to load a program
   mem_rom_[hack++] = 0xA9; mem_rom_[hack++] = 0x04;				// LDA #$04

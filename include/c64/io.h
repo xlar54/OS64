@@ -41,16 +41,21 @@ class IO
     uint8_t shift;
     uint8_t mode;
 
+    static const uint8_t kbd[8][8];
+  
     unsigned int next_key_event_at_;
     static const int kWait = 18000;
     /* vertical refresh sync */
     //std::chrono::high_resolution_clock::time_point prev_frame_was_at_;
     void vsync();
-    void load_file();
-    void save_file();
-
-    Fat32 *fat32_;
     
+    Fat32 *fat32_;
+    void file_load();
+    void file_save();
+    void file_open();
+    void file_close();
+    void file_get();
+
     uint8_t *vgaMem;		// pointer to the offset of VGA memory
     uint8_t vscreen[320*200];	// pointer to the offset of virtual screen.
         
@@ -69,8 +74,7 @@ class IO
     void init_keyboard();
     void OnKeyDown(uint8_t c);
     void OnKeyUp(uint8_t c);
-    void handle_keydown();
-    void handle_keyup();
+
     void type_character(char c);
     inline uint8_t keyboard_matrix_row(int col){return keyboard_matrix_[col];};
     inline void screen_draw_rect(int x, int y, int n, uint8_t color) {

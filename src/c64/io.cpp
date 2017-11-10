@@ -19,6 +19,40 @@
 #include <c64/vic.h>
 #include <lib/vga.h>
 
+// The 64 has only 64 keys. This matrix represents the keyboard
+// to the CIA1 chip. PC keys must supply the same code for a keypress
+// to be detected.  But actual key mappings can be changed
+// via the memory.cpp file and altering the codes generated
+
+/*
++----+----------------------+-------------------------------------------------------------------------------------------------------+
+|    |                      |                                Peek from $dc01 (code in paranthesis):                                 |
+|row:| $dc00:               +------------+------------+------------+------------+------------+------------+------------+------------+
+|    |                      |   BIT 7    |   BIT 6    |   BIT 5    |   BIT 4    |   BIT 3    |   BIT 2    |   BIT 1    |   BIT 0    |
++----+----------------------+------------+------------+------------+------------+------------+------------+------------+------------+
+|1.  | #%11111110 (254/$fe) | DOWN  ($  )|   F5  ($  )|   F3  ($  )|   F1  ($  )|   F7  ($  )| RIGHT ($  )| RETURN($  )|DELETE ($  )|
+|2.  | #%11111101 (253/$fd) |LEFT-SH($  )|   e   ($05)|   s   ($13)|   z   ($1a)|   4   ($34)|   a   ($01)|   w   ($17)|   3   ($33)|
+|3.  | #%11111011 (251/$fb) |   x   ($18)|   t   ($14)|   f   ($06)|   c   ($03)|   6   ($36)|   d   ($04)|   r   ($12)|   5   ($35)|
+|4.  | #%11110111 (247/$f7) |   v   ($16)|   u   ($15)|   h   ($08)|   b   ($02)|   8   ($38)|   g   ($07)|   y   ($19)|   7   ($37)|
+|5.  | #%11101111 (239/$ef) |   n   ($0e)|   o   ($0f)|   k   ($0b)|   m   ($0d)|   0   ($30)|   j   ($0a)|   i   ($09)|   9   ($39)|
+|6.  | #%11011111 (223/$df) |   ,   ($2c)|   @   ($00)|   :   ($3a)|   .   ($2e)|   -   ($2d)|   l   ($0c)|   p   ($10)|   +   ($2b)|
+|7.  | #%10111111 (191/$bf) |   /   ($2f)|   ^   ($1e)|   =   ($3d)|RGHT-SH($  )|  HOME ($  )|   ;   ($3b)|   *   ($2a)|   £   ($1c)|
+|8.  | #%01111111 (127/$7f) | STOP  ($  )|   q   ($11)|COMMODR($  )| SPACE ($20)|   2   ($32)|CONTROL($  )|  <-   ($1f)|   1   ($31)|
++----+----------------------+------------+------------+------------+------------+------------+------------+------------+------------+
+*/
+
+const uint8_t IO::kbd[8][8] = {
+  {0x0E, 0x0A, 0xFB, 0xF7 , 0xF1 , 0xF3 , 0xF5 , 0xFE},
+  {'3' , 'W' , 'A' , '4'  , 'Z'  , 'S'  , 'E'  , 0x2A},
+  {'5' , 'R' , 'D' , '6'  , 'C'  , 'F'  , 'T'  , 'X'},
+  {'7' , 'Y' , 'G' , '8'  , 'B'  , 'H'  , 'U'  , 'V'},
+  {'9' , 'I' , 'J' , '0'  , 'M'  , 'K'  , 'O'  , 'N'},
+  {'+' , 'P' , 'L' , '-'  , '.'  , ';'  , '['  , ','},
+  {0x5C, ']' , '\'', 0xFC , 0x36 , '='  , 0x2B , '/'},
+  {'1' , '`' , 0x1D, '2'  , ' '  , 0xFF , 'Q'  , 0x0F}
+};
+
+
 // clas ctor and dtor //////////////////////////////////////////////////////////
 
 IO::IO()
@@ -30,6 +64,8 @@ IO::IO()
   retval_ = true;
   
   vgaMem = (uint8_t*) 0xA0000;
+  
+
 }
 
 IO::~IO()
@@ -81,12 +117,12 @@ bool IO::emulate()
   {
     case 0x04:
     {
-      load_file();
+      file_load();
       break;
     }
     case 0x05:
     {
-      save_file();
+      file_save();
       break;
     }
     default:
@@ -105,62 +141,108 @@ void IO::process_events()
 
 void IO::OnKeyDown(uint8_t c)
 {
-	// PC keycode to petscii translation.  We are just injecting to the keyboard buffer for now.
-	switch(c)
-	{
-	  case '1' : { if (shift == 1) c = 0x21; break; } // (
-	  case '2' : { if (shift == 1) c = 0x40; break; } // (
-	  case '3' : { if (shift == 1) c = 0x23; break; } // (
-	  case '4' : { if (shift == 1) c = 0x24; break; } // (
-	  case '5' : { if (shift == 1) c = 0x25; break; } // (
-	  case '6' : { if (shift == 1) c = 0x20; break; } // (
-	  case '7' : { if (shift == 1) c = 0x26; break; } // (
-	  case '8' : { if (shift == 1) c = 0x2A; break; } // (
-	  case '9' : { if (shift == 1) c = 0x28; break; } // (
-	  case '0' : { if (shift == 1) c = 0x29; break; } // )
-	  case ',' : { if (shift == 1) c = 0x3C; break; } // )
-	  case '.' : { if (shift == 1) c = 0x3E; break; } // )
-	  case ';' : { if (shift == 1) c = 0x3A; break; } // )
-	  case '/' : { if (shift == 1) c = 0x3F; else c= 0x2F; break; } // )
-	  case '\'': { if (shift == 1) c = 0x22; break; } // Double Quote
-	  case 0x0E: { c = 0x14; break; } // Backspace
-	  case 0x0A: { c = 0x0D; break; } // Return
-	  case '=':  { if (shift == 1) c = 0x2B; else c= 0x3D; break; } // )
-	  //case 0x3B: { c = 0x85; break; } // F1
-	  /*case 0x3C: { c = 0x89; break; } // F2
-	  case 0x3D: { c = 0x86; break; } // F3
-	  case 0x3E: { c = 0x8A; break; } // F4
-	  case 0x3F: { c = 0x87; break; } // F5
-	  case 0x40: { c = 0x86; break; } // F6
-	  case 0x41: { c = 0x8B; break; } // F7
-	  case 0x42: { c = 0x8C; break; } // F8*/
-	  //case 0x38: { mem_->write_byte(0x91, 0x7F); break; } // runstop key
-	  
-	  case 0x13: { if (shift == 1) c = 0x93; else c= 0x13; break; } // home / clr home  
-	  case 0x2A: { c = 0x00; shift=1; break; }
-	}
-	if(c != 0x00)
-	{
-	  mem_->write_byte(631,c);
-	  mem_->write_byte(198,1);
-	}
+  if(c == 0xFD) // cursor up (simulate shift-cursor down)
+  {
+    keyboard_matrix_[0] &= ~(1 << 7);
+    keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xFA) // cursor left (simulate shift-cursor right)
+  {
+    keyboard_matrix_[0] &= ~(1 << 2);
+    keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xF2) // F2
+  {
+    keyboard_matrix_[0] &= ~(1 << 4); // F1
+    keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xF4) // F4
+  {
+    keyboard_matrix_[0] &= ~(1 << 5); // F3
+    keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xF6) // F6
+  {
+    keyboard_matrix_[0] &= ~(1 << 6); // F5
+    keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xF8) // F8
+  {
+    keyboard_matrix_[0] &= ~(1 << 3); // F7
+    keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
+    return;
+  }
+  
+  for(int row=0;row<8;row++)
+    for(int col=0;col<8;col++)
+      if(kbd[row][col] == c)
+      {
+	keyboard_matrix_[row] &= ~(1 << col);
+      }  
 }
     
 void IO::OnKeyUp(uint8_t c)
 {
-      if(c == 0xaa)
-	shift = 0;
+  if(c == 0xFD) // cursor up
+  {
+    keyboard_matrix_[0] |= (1 << 7);
+    keyboard_matrix_[1] |= (1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xFA) // cursor left
+  {
+    keyboard_matrix_[0] |= (1 << 2);
+    keyboard_matrix_[1] |= (1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xF2) // F2
+  {
+    keyboard_matrix_[0] |= (1 << 4); // F1
+    keyboard_matrix_[1] |= (1 << 7); // SHIFT
+    return;
+  }
+   
+  if(c == 0xF4) // F4
+  {
+    keyboard_matrix_[0] |= (1 << 5); // F3
+    keyboard_matrix_[1] |= (1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xF6) // F6
+  {
+    keyboard_matrix_[0] |= (1 << 6); // F5
+    keyboard_matrix_[1] |= (1 << 7); // SHIFT
+    return;
+  }
+  
+  if(c == 0xF8) // F8
+  {
+    keyboard_matrix_[0] |= (1 << 3); // F7
+    keyboard_matrix_[1] |= (1 << 7); // SHIFT
+    return;
+  }
+  
+  for(int row=0;row<8;row++)
+    for(int col=0;col<8;col++)
+      if(kbd[row][col] == c)
+      {
+	keyboard_matrix_[row] |= (1 << col);
+      }
 }
 
-void IO::handle_keydown()
-{
-
-}
-
-void IO::handle_keyup()
-{
-
-}
 
 void IO::type_character(char c)
 {
@@ -175,7 +257,7 @@ void IO::vsync()
     //while (!(inb(0x03da) & 0x08)) {};
 }
 
-void IO::load_file()
+void IO::file_load()
 {
   mem_->write_byte(0x02,0);	// clear command byte
   
@@ -262,7 +344,7 @@ void IO::load_file()
   }
 }
 
-void IO::save_file()
+void IO::file_save()
 {
   mem_->write_byte(0x02,0);	// clear command byte
   
@@ -299,4 +381,40 @@ void IO::save_file()
   }
 }
 
+void IO::file_open()
+{
+  mem_->write_byte(0x02,0);	// clear command byte
+  
+  int fstatus = 0;
+  
+  uint8_t filenameLength = mem_->read_byte(0xB7);
+  uint8_t secondaryAddr = mem_->read_byte(0xB9);
+  uint8_t deviceNum = mem_->read_byte(0xBA);
+  uint8_t filenamePtrLo = mem_->read_byte(0xBB);
+  uint8_t filenamePtrHi = mem_->read_byte(0xBC);
+	  
+  uint16_t filenamePtr = (filenamePtrHi << 8) + (filenamePtrLo & 0xFF);
+  uint8_t filenameBuffer[13]="        .PRG";
+  uint16_t size;
+  
+  for(int z=0;z<filenameLength; z++)
+    filenameBuffer[z] = mem_->read_byte(filenamePtr+z);
+  
+  fstatus = fat32_->OpenFile(1, (uint8_t*)filenameBuffer, FILEACCESSMODE_READ);
+  
+  if(fstatus == FILE_STATUS_NOTFOUND)
+  {
+    mem_->write_byte(0x90,0x42);	// ST = $0x42 (66 dec)
+    return;
+  }
+}
+
+void IO::file_get()
+{
+}
+
+void IO::file_close()
+{
+
+}
 

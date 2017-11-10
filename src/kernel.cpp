@@ -35,6 +35,7 @@ public:
     {
       mode = 0;
     }
+    
     void OnKeyDown(uint8_t c)
     {
       // ESC key will toggle between text mode and emulation
@@ -59,19 +60,8 @@ public:
       
       switch(mode)
       {
-	case 0:
-	  // Translate key for CBM emulation
-	  if (c == 0xFF)
-	  {
-	    c64ptr->mem_->write_byte(0x91, 0x7F);
-	    break;
-	  }
-	  c64ptr->io_->OnKeyDown(c);
-	  break;
-	case 1:
-	  // No translation
-	  c64ptr->io_->mon_->OnKeyDown(c);
-	  break;
+	case 0: c64ptr->io_->OnKeyDown(c); break;
+	case 1: c64ptr->io_->mon_->OnKeyDown(c); break;
       }
     }
     
@@ -79,11 +69,8 @@ public:
     {
       switch(mode)
       {
-	case 0:
-	  c64ptr->io_->OnKeyUp(c);
-	  break;
-	case 1:
-	  break;
+	case 0: c64ptr->io_->OnKeyUp(c); break;
+	case 1: c64ptr->io_->mon_->OnKeyUp(c); break;
       }
     }
 };

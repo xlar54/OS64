@@ -72,6 +72,10 @@ void Monitor::OnKeyDown(uint8_t c)
   }
 }
 
+void Monitor::OnKeyUp(uint8_t c)
+{
+}
+
 void Monitor::help()
 {
   printf("Commands:\n");

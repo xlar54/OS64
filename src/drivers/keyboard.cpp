@@ -29,9 +29,6 @@ KeyboardDriver::~KeyboardDriver()
 {
 }
 
-//void printf(char*);
-//void printfHex(uint8_t);
-
 void KeyboardDriver::Activate()
 {
     while(commandport.Read() & 0x1)
@@ -49,132 +46,139 @@ void KeyboardDriver::Activate()
 uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 {
     uint8_t key = dataport.Read();
-    
+
     if(handler == 0)
         return esp;
-    
-    // Treat left and right shift as same
-    if (key == 0xAA | key == 0xB6)
-    {
-      handler->OnKeyUp(0xAA);
-    }
     
     // Extended keys
     if(key == 0xE0)
     {
-      uint8_t extdkey = dataport.Read();
+      key = dataport.Read();
       
-      switch(extdkey)
+      switch(key)
       {
-	case 0x4D: handler->OnKeyDown(0x1D); break; // Cursor Right 
-	case 0x4B: handler->OnKeyDown(0x9D); break;  // Cursor Left 
-	case 0x47: handler->OnKeyDown(0x13); break;  // Cursor Home
-	case 0x48: handler->OnKeyDown(0x91); break;  // Cursor Up  
-	case 0x50: handler->OnKeyDown(0x11); break;  // Cursor Down
+	case 0x4B: handler->OnKeyDown(0xFA); break;  // Cursor Left 
+	case 0x4D: handler->OnKeyDown(0xFB); break;  // Cursor Right 
+	case 0x47: handler->OnKeyDown(0xFC); break;  // Cursor Home
+	case 0x48: handler->OnKeyDown(0xFD); break;  // Cursor Up  
+	case 0x50: handler->OnKeyDown(0xFE); break;  // Cursor Down
+	
+	case 0xCB: handler->OnKeyUp(0xFA); break;  // Cursor Left 
+	case 0xCD: handler->OnKeyUp(0xFB); break;  // Cursor Right 
+	case 0xC7: handler->OnKeyUp(0xFC); break;  // Cursor Home
+	case 0xC8: handler->OnKeyUp(0xFD); break;  // Cursor Up  
+	case 0xD0: handler->OnKeyUp(0xFE); break;  // Cursor Down
+      }
+    }
+    else
+    { 
+      uint8_t pressed = 1;
+      
+      if(key >= 0x80)
+      {
+	pressed = 0;
+	key = key-128;
       }
       
+      uint8_t newKey = 0;
+      
+      switch(key)
+      {
+	case 0x01: newKey=0x01; break; // ESC
+	case 0x02: newKey='1'; break;
+	case 0x03: newKey='2'; break;
+	case 0x04: newKey='3'; break;
+	case 0x05: newKey='4'; break;
+	case 0x06: newKey='5'; break;
+	case 0x07: newKey='6'; break;
+	case 0x08: newKey='7'; break;
+	case 0x09: newKey='8'; break;
+	case 0x0A: newKey='9'; break;
+	case 0x0B: newKey='0'; break;
+	case 0x0C: newKey='-'; break;
+	case 0x0D: newKey='='; break;
+	case 0x0E: newKey=0x0E; break; // Backspace
+	case 0x0F: newKey=0x0F; break; // Tab
+	case 0x10: newKey='Q'; break;
+	case 0x11: newKey='W'; break;
+	case 0x12: newKey='E'; break;
+	case 0x13: newKey='R'; break;
+	case 0x14: newKey='T'; break;
+	case 0x15: newKey='Y'; break;
+	case 0x16: newKey='U'; break;
+	case 0x17: newKey='I'; break;
+	case 0x18: newKey='O'; break;
+	case 0x19: newKey='P'; break;
+	case 0x1A: newKey='['; break;
+	case 0x1B: newKey=']'; break;
+	case 0x1C: newKey='\n'; break;
+	case 0x1D: newKey= 0x1D; break; // Left Ctrl
+	case 0x1E: newKey='A'; break;
+	case 0x1F: newKey='S'; break;
+	case 0x20: newKey='D'; break;
+	case 0x21: newKey='F'; break;
+	case 0x22: newKey='G'; break;
+	case 0x23: newKey='H'; break;
+	case 0x24: newKey='J'; break;
+	case 0x25: newKey='K'; break;
+	case 0x26: newKey='L'; break;
+	case 0x27: newKey=';'; break;
+	case 0x28: newKey='\''; break;
+	case 0x29: newKey='`'; break;
+	case 0x2A: newKey=0x2A; break; //LEFTSHIFT
+	case 0x2B: newKey=0x2B; break;
+	case 0x2C: newKey='Z'; break;
+	case 0x2D: newKey='X'; break;
+	case 0x2E: newKey='C'; break;
+	case 0x2F: newKey='V'; break;
+	case 0x30: newKey='B'; break;
+	case 0x31: newKey='N'; break;
+	case 0x32: newKey='M'; break;
+	case 0x33: newKey=','; break;
+	case 0x34: newKey='.'; break;
+	case 0x35: newKey='/'; break;
+	case 0x36: newKey=0x2A; break; // RIGHTSHIFT
+	case 0x37: newKey='*'; break;
+	case 0x38: newKey=0xFF; break; //LEFT ALT
+	case 0x39: newKey=' '; break;
+	//case 0x3A: newKey=0x3A; break; // CAPSLOCK
+	case 0x3B: newKey=0xF1; break; //F1
+	case 0x3C: newKey=0xF2; break; //F2
+	case 0x3D: newKey=0xF3; break; //F3
+	case 0x3E: newKey=0xF4; break; //F4
+	case 0x3F: newKey=0xF5; break; //F5
+	case 0x40: newKey=0xF6; break; //F6
+	case 0x41: newKey=0xF7; break; //F7
+	case 0x42: newKey=0xF8; break; //F8
+	//case 0x43: newKey=0x49; break; //F9
+	//case 0x44: newKey=0x44; break; //F10
+	//case 0x45: newKey=0x45; break; //NUMLOCK
+	//case 0x46: newKey=0x46; break; // SCROLL LOCK
+	//case 0x47: newKey=0x47; break; // HOME
+	/*case 0x48: newKey=0x91; break; // 8 - up
+	case 0x49: newKey='9'; break;
+	case 0x4A: newKey='-'; break;
+	case 0x4B: newKey=0x9D; break; // 4 - left
+	case 0x4C: newKey='5'; break;
+	case 0x4D: newKey=0x1D; break; // 6 - right
+	case 0x4E: newKey='+'; break;
+	case 0x4F: newKey='1'; break;
+	case 0x50: newKey=0x11; break; // 2 - down
+	case 0x51: newKey='3'; break;
+	case 0x52: newKey='0'; break;
+	case 0x53: newKey='.'; break;*/
+	//case 0x57: newKey=0x57; break;	// F11
+	//case 0x58: newKey=F12; break;
+      }
+      //printf("\nscancode=%02X",newKey);
+      if(newKey !=0)
+      {
+	if(pressed == 1)
+	  handler->OnKeyDown(newKey);
+	else
+	  handler->OnKeyUp(newKey);
+      }
     }
-    
-    if(key < 0x80)
-    {
-        switch(key)
-        {
-	    case 0x01: handler->OnKeyDown(0x01); break; // ESC
-            case 0x02: handler->OnKeyDown('1'); break;
-            case 0x03: handler->OnKeyDown('2'); break;
-            case 0x04: handler->OnKeyDown('3'); break;
-            case 0x05: handler->OnKeyDown('4'); break;
-            case 0x06: handler->OnKeyDown('5'); break;
-            case 0x07: handler->OnKeyDown('6'); break;
-            case 0x08: handler->OnKeyDown('7'); break;
-            case 0x09: handler->OnKeyDown('8'); break;
-            case 0x0A: handler->OnKeyDown('9'); break;
-            case 0x0B: handler->OnKeyDown('0'); break;
-	    case 0x0C: handler->OnKeyDown('-'); break;
-	    case 0x0D: handler->OnKeyDown('='); break;
-	    case 0x0E: handler->OnKeyDown(0x0E); break; // Backspace
-	    case 0x0F: handler->OnKeyDown(0x0F); break; // Tab
-            case 0x10: handler->OnKeyDown('Q'); break;
-            case 0x11: handler->OnKeyDown('W'); break;
-            case 0x12: handler->OnKeyDown('E'); break;
-            case 0x13: handler->OnKeyDown('R'); break;
-            case 0x14: handler->OnKeyDown('T'); break;
-            case 0x15: handler->OnKeyDown('Y'); break;
-            case 0x16: handler->OnKeyDown('U'); break;
-            case 0x17: handler->OnKeyDown('I'); break;
-            case 0x18: handler->OnKeyDown('O'); break;
-            case 0x19: handler->OnKeyDown('P'); break;
-	    case 0x1A: handler->OnKeyDown('['); break;
-	    case 0x1B: handler->OnKeyDown(']'); break;
-	    case 0x1C: handler->OnKeyDown('\n'); break;
-            
-	    case 0x1E: handler->OnKeyDown('A'); break;
-            case 0x1F: handler->OnKeyDown('S'); break;
-            case 0x20: handler->OnKeyDown('D'); break;
-            case 0x21: handler->OnKeyDown('F'); break;
-            case 0x22: handler->OnKeyDown('G'); break;
-            case 0x23: handler->OnKeyDown('H'); break;
-            case 0x24: handler->OnKeyDown('J'); break;
-            case 0x25: handler->OnKeyDown('K'); break;
-            case 0x26: handler->OnKeyDown('L'); break;
-	    case 0x27: handler->OnKeyDown(';'); break;
-            case 0x28: handler->OnKeyDown('\''); break;
-	    case 0x29: handler->OnKeyDown('`'); break;
-	    case 0x2A: handler->OnKeyDown(0x2A); break; //LEFTSHIFT
-	    case 0x2B: handler->OnKeyDown('\\'); break;
-	    case 0x2C: handler->OnKeyDown('Z'); break;
-            case 0x2D: handler->OnKeyDown('X'); break;
-            case 0x2E: handler->OnKeyDown('C'); break;
-            case 0x2F: handler->OnKeyDown('V'); break;
-            case 0x30: handler->OnKeyDown('B'); break;
-            case 0x31: handler->OnKeyDown('N'); break;
-            case 0x32: handler->OnKeyDown('M'); break;
-            case 0x33: handler->OnKeyDown(','); break;
-            case 0x34: handler->OnKeyDown('.'); break;
-            case 0x35: handler->OnKeyDown('/'); break;
-	    case 0x36: handler->OnKeyDown(0x2A); break; // RIGHTSHIFT (just sending the same as left for now)
-	    case 0x37: handler->OnKeyDown('*'); break;
-	    case 0x38: handler->OnKeyDown(0xFF); break; //LEFT ALT
-            case 0x39: handler->OnKeyDown(' '); break;
-	    //case 0x3A: handler->OnKeyDown(CAPSLOCK); break;
-	    case 0x3B: handler->OnKeyDown(0x3B); break; //F1
-	    case 0x3C: handler->OnKeyDown(0x3C); break; //F2
-	    case 0x3D: handler->OnKeyDown(0x3D); break; //F3
-	    case 0x3E: handler->OnKeyDown(0x3E); break; //F4
-	    case 0x3F: handler->OnKeyDown(0x3F); break; //F5
-	    case 0x40: handler->OnKeyDown(0x40); break; //F6
-	    case 0x41: handler->OnKeyDown(0x41); break; //F7
-	    case 0x42: handler->OnKeyDown(0x42); break; //F8
-	    case 0x43: handler->OnKeyDown(0x43); break; //F9
-	    case 0x44: handler->OnKeyDown(0x44); break; //F10
-	    //case 0x45: handler->OnKeyDown(NUMLOCK); break;
-	    case 0x46: handler->OnKeyDown(0x46); break; // SCROLL LOCK
-	    case 0x47: handler->OnKeyDown(0x47); break; // HOME
-	    case 0x48: handler->OnKeyDown(0x91); break; // 8 - up
-	    case 0x49: handler->OnKeyDown('9'); break;
-	    case 0x4A: handler->OnKeyDown('-'); break;
-	    case 0x4B: handler->OnKeyDown(0x9D); break; // 4 - left
-	    case 0x4C: handler->OnKeyDown('5'); break;
-	    case 0x4D: handler->OnKeyDown(0x1D); break; // 6 - right
-	    case 0x4E: handler->OnKeyDown('+'); break;
-	    case 0x4F: handler->OnKeyDown('1'); break;
-	    case 0x50: handler->OnKeyDown(0x11); break; // 2 - down
-	    case 0x51: handler->OnKeyDown('3'); break;
-	    case 0x52: handler->OnKeyDown('0'); break;
-	    case 0x53: handler->OnKeyDown('.'); break;
-	    //case 0x57: handler->OnKeyDown(0x57); break;	// F11
-	    //case 0x58: handler->OnKeyDown(F12); break;
 
-            /*default:
-            {
-                printf("KEYBOARD 0x");
-                printfHex(key);
-                break;
-            }*/
-        }
-    }
-    
-
-    
     return esp;
 }

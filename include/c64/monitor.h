@@ -47,6 +47,7 @@ class Monitor
     void fat32(Fat32 *m) { fat32_ = m; };
     void Run();
     void OnKeyDown(uint8_t c);
+    void OnKeyUp(uint8_t c);
 };
 
 
