@@ -170,9 +170,10 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	//case 0x57: newKey=0x57; break;	// F11
 	//case 0x58: newKey=F12; break;
       }
-      //printf("\nscancode=%02X",newKey);
+      
       if(newKey !=0)
       {
+	//printf("\nscancode=%02X",newKey);
 	if(pressed == 1)
 	  handler->OnKeyDown(newKey);
 	else
