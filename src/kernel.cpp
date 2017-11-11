@@ -35,7 +35,7 @@ public:
     {
       mode = 0;
     }
-    
+
     void OnKeyDown(uint8_t c)
     {
       // ESC key will toggle between text mode and emulation
