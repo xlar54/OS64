@@ -166,9 +166,9 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	case 0x50: newKey=0xFE; break; // 2 - down
 	//case 0x51: newKey='3'; break;
 	//case 0x52: newKey='0'; break;
-	//case 0x53: newKey='.'; break;*/
-	//case 0x57: newKey=0x57; break;	// F11
-	//case 0x58: newKey=F12; break;
+	//case 0x53: newKey='.'; break;
+	//case 0x57: newKey=0x57; break; // F11
+	//case 0x58: newKey=0x58; break; // F12
       }
       
       if(newKey !=0)
