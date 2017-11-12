@@ -182,6 +182,13 @@ void IO::OnKeyDown(uint8_t c)
     keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
     return;
   }
+
+  if(c == 0x02) // RESTORE keyboard
+  {
+    cpu_->nmi();
+    return;
+  }
+  
   
   for(int row=0;row<8;row++)
     for(int col=0;col<8;col++)
