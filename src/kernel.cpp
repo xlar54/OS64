@@ -11,6 +11,7 @@
 #include <drivers/keyboard.h>
 #include <drivers/mouse.h>
 #include <drivers/ata.h>
+#include <drivers/serial.h>
 #include <multitasking.h>
 #include <filesystem/fat.h>
 #include <c64/c64.h>
@@ -119,6 +120,11 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     KeyboardDriver keyboard(&interrupts, &kbhandler);
     drvManager.AddDriver(&keyboard);
     
+    SerialEventHandler serialhandler;
+    SerialDriver serial(&interrupts, &serialhandler);
+    drvManager.AddDriver(&serial);
+    //serial.Send('t');
+    
     PeripheralComponentInterconnectController PCIController;
     PCIController.SelectDrivers(&drvManager, &interrupts);
     drvManager.ActivateAll();
@@ -188,7 +194,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     while(1) {};
     */
-    
+  
     if(vga_set_mode(320,200,8))
     {
       printf("[OK]\n");

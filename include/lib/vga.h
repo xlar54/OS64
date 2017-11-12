@@ -891,7 +891,4 @@ void vga_textmode_clear();
 void puts(char* string);
 void putc(uint8_t);
 
-
-
-
 #endif
