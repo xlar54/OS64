@@ -62,6 +62,7 @@ class Memory
     void vic(Vic *v){vic_ = v;};
     void cia1(Cia1 *v){cia1_ = v;};
     void cia2(Cia2 *v){cia2_ = v;};
+    void sid(Sid *v) {sid_ = v;};
     /* bank switching */
     enum kBankCfg
     {
@@ -114,6 +115,7 @@ class Memory
     static const uint16_t kAddrZeroPage     = 0x0000;
     static const uint16_t kAddrVicFirstPage = 0xd000;
     static const uint16_t kAddrVicLastPage  = 0xd300;
+    static const uint16_t kAddrSIDPage = 0xd400;
     static const uint16_t kAddrCIA1Page = 0xdc00;
     static const uint16_t kAddrCIA2Page = 0xdd00;
     static const uint16_t kAddrBasicFirstPage = 0xa000; 

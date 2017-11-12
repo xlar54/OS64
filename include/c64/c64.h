@@ -26,7 +26,7 @@
 #include <c64/cia1.h>
 #include <c64/cia2.h>
 #include <c64/vic.h>
-//#include <c64/sid.h>
+#include <c64/sid.h>
 #include <c64/io.h>
 #include <c64/monitor.h>
 
@@ -44,14 +44,13 @@ class C64
     Cia1 *cia1_;
     Cia2 *cia2_;
     Vic *vic_;
-    Sid *sid_;
-    
     //std::function<bool()> callback_;
 
   public:
     Memory *mem_;
     Monitor *mon_;
     IO *io_;
+    Sid *sid_;
     C64();
     ~C64();
     void start();

@@ -12,6 +12,7 @@
 #include <drivers/mouse.h>
 #include <drivers/ata.h>
 #include <drivers/serial.h>
+#include <drivers/speaker.h>
 #include <multitasking.h>
 #include <filesystem/fat.h>
 #include <c64/c64.h>
@@ -194,12 +195,15 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     while(1) {};
     */
+   
+    SpeakerDriver speaker;
   
     if(vga_set_mode(320,200,8))
     {
       printf("[OK]\n");
       C64 c64;
       c64ptr = &c64;
+      c64ptr->sid_->speaker(&speaker);
       c64ptr->io_->fat32(&fat32);
       c64ptr->io_->mon_->fat32(&fat32);
       c64.start();

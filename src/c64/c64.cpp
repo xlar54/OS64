@@ -25,7 +25,7 @@ C64::C64()
   cia1_ = new Cia1();
   cia2_ = new Cia2();
   vic_  = new Vic();
-  //sid_  = new Sid();
+  sid_  = new Sid();
   
   mon_ = new Monitor();
   mon_->cpu(cpu_);
@@ -51,6 +51,7 @@ C64::C64()
   mem_->vic(vic_);
   mem_->cia1(cia1_);
   mem_->cia2(cia2_);
+  mem_->sid(sid_);
  /* r2 support */
   
 }

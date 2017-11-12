@@ -48,7 +48,7 @@ class IO
     /* vertical refresh sync */
     //std::chrono::high_resolution_clock::time_point prev_frame_was_at_;
     void vsync();
-    
+        
     Fat32 *fat32_;
     void file_load();
     void file_save();
@@ -69,6 +69,7 @@ class IO
     void memory(Memory *m) {mem_ = m;};
     void monitor(Monitor *m) {mon_ = m;};
     void fat32(Fat32 *m) { fat32_ = m; };
+    
     
     void init_color_palette();
     void init_keyboard();

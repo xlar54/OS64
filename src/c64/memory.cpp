@@ -20,6 +20,7 @@
 #include <c64/vic.h>
 #include <c64/cia1.h>
 #include <c64/cia2.h>
+#include <c64/sid.h>
 
 Memory::Memory()
 {
@@ -211,6 +212,13 @@ void Memory::write_byte(uint16_t addr, uint8_t v)
   {
     if(banks_[kBankCharen] == kIO)
       cia2_->write_register(addr&0x0f,v);
+    else
+      mem_ram_[addr] = v;
+  }
+  else if (page == kAddrSIDPage)
+  {
+    if(banks_[kBankCharen] == kIO)
+      sid_->write_register(addr&0xff,v);
     else
       mem_ram_[addr] = v;
   }

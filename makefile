@@ -21,12 +21,14 @@ objects = obj/loader.o \
           obj/drivers/mouse.o \
           obj/drivers/ata.o \
           obj/drivers/serial.o \
+          obj/drivers/speaker.o \
           obj/filesystem/fat.o \
           obj/c64/c64.o \
           obj/c64/cia1.o \
           obj/c64/cia2.o \
           obj/c64/cpu.o \
           obj/c64/io.o \
+          obj/c64/sid.o \
           obj/c64/memory.o \
           obj/c64/vic.o \
           obj/c64/monitor.o \
