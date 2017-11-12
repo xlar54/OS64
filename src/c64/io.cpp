@@ -183,9 +183,15 @@ void IO::OnKeyDown(uint8_t c)
     return;
   }
 
-  if(c == 0x02) // RESTORE keyboard
+  if(c == 0x02) // RESTORE keyboard (F9)
   {
     cpu_->nmi();
+    return;
+  }
+  
+  if(c == 0x03) // Reset machine (F10)
+  {
+    cpu_->reset();
     return;
   }
   

@@ -151,7 +151,7 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	case 0x41: newKey=0xF7; break; //F7
 	case 0x42: newKey=0xF8; break; //F8
 	case 0x43: newKey=0x02; break; //F9
-	//case 0x44: newKey=0x44; break; //F10
+	case 0x44: newKey=0x03; break; //F10
 	//case 0x45: newKey=0x45; break; //NUMLOCK
 	//case 0x46: newKey=0x46; break; // SCROLL LOCK
 	case 0x47: newKey=0xFC; break; // HOME
