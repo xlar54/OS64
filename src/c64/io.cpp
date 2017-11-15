@@ -82,6 +82,9 @@ void IO::init_keyboard()
   {
     keyboard_matrix_[i] = 0xff;
   }
+  
+  joy1 = 0;
+  joy2 = 0;
 }
 
 void IO::init_color_palette()
@@ -137,12 +140,38 @@ void IO::process_events()
 
 }
 
+uint8_t IO::getJoystick(uint8_t num)
+{
+  if(num == 1)
+  {
+    return joy1;
+  }
+  
+  if(num == 2)
+  {
+    return joy2;
+  }
+  
+  return 0;
+}
+
 // keyboard handling /////////////////////////////////////////////////////////// 
 
 void IO::OnKeyDown(uint8_t c)
 {
+  if(c == 0x2A) // shift 
+    joy2 |= (1 << 4);	// fire
+  
+  if(c == 0xFB)	// cursor right 
+    joy2 |= (1 << 3);	// joy2 right
+
+  
+  if(c == 0xFE)	// cursor down 
+    joy2 |= (1 << 1);	// joy2 right
+  
   if(c == 0xFD) // cursor up (simulate shift-cursor down)
   {
+    joy2 |= (1 << 0);	// joy2 up
     keyboard_matrix_[0] &= ~(1 << 7);
     keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
     return;
@@ -150,6 +179,7 @@ void IO::OnKeyDown(uint8_t c)
   
   if(c == 0xFA) // cursor left (simulate shift-cursor right)
   {
+    joy2 |= (1 << 2);;
     keyboard_matrix_[0] &= ~(1 << 2);
     keyboard_matrix_[1] &= ~(1 << 7); // SHIFT
     return;
@@ -206,6 +236,8 @@ void IO::OnKeyDown(uint8_t c)
     
 void IO::OnKeyUp(uint8_t c)
 {
+  joy2 = 0;
+  
   if(c == 0xFD) // cursor up
   {
     keyboard_matrix_[0] |= (1 << 7);

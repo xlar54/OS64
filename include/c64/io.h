@@ -40,6 +40,7 @@ class IO
     };
     uint8_t shift;
     uint8_t mode;
+    uint8_t joy1, joy2;
 
     static const uint8_t kbd[8][8];
   
@@ -75,6 +76,7 @@ class IO
     void init_keyboard();
     void OnKeyDown(uint8_t c);
     void OnKeyUp(uint8_t c);
+    uint8_t getJoystick(uint8_t num);
 
     void type_character(char c);
     inline uint8_t keyboard_matrix_row(int col){return keyboard_matrix_[col];};

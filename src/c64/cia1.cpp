@@ -28,6 +28,8 @@ Cia1::Cia1()
   timer_a_run_mode_ = timer_b_run_mode_ = kModeRestart;
   pra_ = prb_ = 0xff;
   prev_cpu_cycles_ = 0;
+  ddra_ = 0xff;
+  ddrb_ = 0x00;
 }
 
 // DMA register access  //////////////////////////////////////////////////////
@@ -45,9 +47,11 @@ void Cia1::write_register(uint8_t r, uint8_t v)
     break;
   /* data direction port a (DDRA) */
   case 0x2:
+    ddra_ = v;
     break;
   /* data direction port b (DDRB) */
   case 0x3:
+    ddrb_ = v;
     break;
   /* timer a low byte */
   case 0x4:
@@ -120,6 +124,8 @@ uint8_t Cia1::read_register(uint8_t r)
   {
   /* data port a (PRA), keyboard matrix cols and joystick #2 */
   case 0x0:
+    retval = (pra_ | ~ddra_);
+    retval = retval - io_->getJoystick(2);
     break;
   /* data port b (PRB), keyboard matrix rows and joystick #1 */
   case 0x1:
@@ -134,9 +140,11 @@ uint8_t Cia1::read_register(uint8_t r)
     break;
   /* data direction port a (DDRA) */
   case 0x2:
+    retval = ddra_;
     break;
   /* data direction port b (DDRB) */
   case 0x3:
+    retval = ddrb_;
     break;
   /* timer a low byte */
   case 0x4:

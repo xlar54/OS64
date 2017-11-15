@@ -94,79 +94,8 @@ void Memory::setup_memory_banks(uint8_t v)
   /* write the config to the zero page */
   write_byte_no_io(kAddrMemoryLayout, v);
   
-  //for(uint16_t i=2; i < 4099; i++)
-  //  mem_ram_[49152+(i-2)] = monitorC000[i];
+  patch_roms();
   
-  //for(uint16_t i=2; i < 4225; i++)
-  //  mem_ram_[36864+(i-2)] = micromon[i];
-  
-  //for(uint16_t i=2; i < g_myData_Size; i++)
-  //  mem_ram_[49152+(i-2)] = g_myData[i];
-  
-  //for (uint16_t i=0; i<3687;i++)
-  //  mem_ram_[0xc000 + i] = speed2_bin[i];
-  
-  // keyboard modifications for keycode to match PC keyboard
-  uint16_t hack = 0xEB81;	// std keys
-  mem_rom_[hack+46] = 0x5B;	// PETSCII for [
-  mem_rom_[hack+49] = 0x5D;	// PETSCII for ]
-  mem_rom_[hack+50] = 0x27;	// PETSCII for '
-  mem_rom_[hack+45] = 0x3B;	// PETSCII for ;
-
-  
-  hack = 0xEBC2;		// shifted keys
-  mem_rom_[hack+59] = 0x40;	// PETSCII @ for SHIFT-2
-  mem_rom_[hack+19] = 0x5E;	// PETSCII & for SHIFT-6
-  mem_rom_[hack+24] = 0x26;	// PETSCII & for SHIFT-7
-  mem_rom_[hack+27] = 0x2A;	// PETSCII & for SHIFT-8
-  mem_rom_[hack+32] = 0x28;	// PETSCII & for SHIFT-9
-  mem_rom_[hack+35] = 0x29;	// PETSCII & for SHIFT-0
-  mem_rom_[hack+50] = 0x22;	// PETSCII for "
-  mem_rom_[hack+45] = 0x3A;	// PETSCII for :
-  mem_rom_[hack+53] = 0x2B;	// PETSCII for +
-  
-  
-  //kernel hack for ide drive access
-  hack = 0xF4C4;	// KERNEL LOAD FROM SERIAL BUS (Starts at $F4B8)
-    
-  // Tell FAT32 driver to load a program
-  mem_rom_[hack++] = 0xA9; mem_rom_[hack++] = 0x04;				// LDA #$04
-  mem_rom_[hack++] = 0x8D; mem_rom_[hack++] = 0x02; mem_rom_[hack++] = 0x00;	// STA $0002
-  
-  // Check the STATUS byte.  Print FILE NOT FOUND if not found
-  mem_rom_[hack++] = 0xA5; mem_rom_[hack++] = 0x90;				// LDA $90
-  mem_rom_[hack++] = 0x4A;							// LSR
-  mem_rom_[hack++] = 0x4A;							// LSR
-  mem_rom_[hack++] = 0xB0; mem_rom_[hack++] = 0x61;				// BCS $F530 <=
-  
-  // Print LOADING
-  mem_rom_[hack++] = 0x20; mem_rom_[hack++] = 0xD2; mem_rom_[hack++] = 0xF5;	// JSR $F5D2
-  
-  // END
-  mem_rom_[hack++] = 0x18;							// CLC
-  mem_rom_[hack++] = 0xA6; mem_rom_[hack++] = 0xAE;				// LDX $AE
-  mem_rom_[hack++] = 0xA4; mem_rom_[hack++] = 0xAF;				// LDY $AF
-  mem_rom_[hack++] = 0x60;							// RTS
-  
-  
-  hack = 0xF605;	// KERNEL SAVE TO SERIAL BUS (Starts at $F4B8)
-    
-  // Tell FAT32 driver to load a program
-  mem_rom_[hack++] = 0xA9; mem_rom_[hack++] = 0x05;				// LDA #$05
-  mem_rom_[hack++] = 0x8D; mem_rom_[hack++] = 0x02; mem_rom_[hack++] = 0x00;	// STA $0002
-  
-  // Check the STATUS byte.  Print FILE NOT FOUND if not found
-  /*mem_rom_[hack++] = 0xA5; mem_rom_[hack++] = 0x90;				// LDA $90
-  mem_rom_[hack++] = 0x4A;							// LSR
-  mem_rom_[hack++] = 0x4A;							// LSR
-  mem_rom_[hack++] = 0xB0; mem_rom_[hack++] = 0x61;				// BCS $F530 <=
-  
-  // Print LOADING
-  mem_rom_[hack++] = 0x20; mem_rom_[hack++] = 0xD2; mem_rom_[hack++] = 0xF5;	// JSR $F5D2*/
-  
-  // END
-  mem_rom_[hack++] = 0x18;							// CLC
-  mem_rom_[hack++] = 0x60;							// RTS
 }
 
 /**
@@ -356,4 +285,92 @@ uint8_t Memory::vic_read_byte(uint16_t addr)
   return v;
 }
 
+void Memory::patch_roms()
+{
+  // ML monitor loaded to $C000
+  for(uint16_t i=2; i < 4099; i++)
+    mem_ram_[49152+(i-2)] = monitorC000[i];
+  
+  //for(uint16_t i=2; i < 4225; i++)
+  //  mem_ram_[36864+(i-2)] = micromon[i];
+  
+  //for(uint16_t i=2; i < g_myData_Size; i++)
+  //  mem_ram_[49152+(i-2)] = g_myData[i];
+  
+  //for (uint16_t i=0; i<3687;i++)
+  //  mem_ram_[0xc000 + i] = speed2_bin[i];
+  
+  // Used to load a PRG file into RAM so it can be saved to disk
+ /* uint16_t sz = yars_prg_size-2;
+  for(uint16_t i=2;i<sz-2;i++)
+    mem_ram_[0x0801+i-2] = yars_prg[i];
+  
+  mem_ram_[0x2D] = (0x0801 + sz) & 0xFF; // poke low byte to 45  
+  mem_ram_[0x2E] = (0x0801 + sz) >> 8; // poke hi byte to 46
+  */
+  
+  // keyboard modifications for keycode to match PC keyboard
+  uint16_t hack = 0xEB81;	// std keys
+  mem_rom_[hack+46] = 0x5B;	// PETSCII for [
+  mem_rom_[hack+49] = 0x5D;	// PETSCII for ]
+  mem_rom_[hack+50] = 0x27;	// PETSCII for '
+  mem_rom_[hack+45] = 0x3B;	// PETSCII for ;
+
+  
+  hack = 0xEBC2;		// shifted keys
+  mem_rom_[hack+59] = 0x40;	// PETSCII @ for SHIFT-2
+  mem_rom_[hack+19] = 0x5E;	// PETSCII & for SHIFT-6
+  mem_rom_[hack+24] = 0x26;	// PETSCII & for SHIFT-7
+  mem_rom_[hack+27] = 0x2A;	// PETSCII & for SHIFT-8
+  mem_rom_[hack+32] = 0x28;	// PETSCII & for SHIFT-9
+  mem_rom_[hack+35] = 0x29;	// PETSCII & for SHIFT-0
+  mem_rom_[hack+50] = 0x22;	// PETSCII for "
+  mem_rom_[hack+45] = 0x3A;	// PETSCII for :
+  mem_rom_[hack+53] = 0x2B;	// PETSCII for +
+  
+  hack = 0x28A;
+  mem_ram_[hack] = 64;		// Disable key repeat (for fast machines)
+  
+  //kernel hack for ide drive access
+  hack = 0xF4C4;	// KERNEL LOAD FROM SERIAL BUS (Starts at $F4B8)
+    
+  // Tell FAT32 driver to load a program
+  mem_rom_[hack++] = 0xA9; mem_rom_[hack++] = 0x04;				// LDA #$04
+  mem_rom_[hack++] = 0x8D; mem_rom_[hack++] = 0x02; mem_rom_[hack++] = 0x00;	// STA $0002
+  
+  // Check the STATUS byte.  Print FILE NOT FOUND if not found
+  mem_rom_[hack++] = 0xA5; mem_rom_[hack++] = 0x90;				// LDA $90
+  mem_rom_[hack++] = 0x4A;							// LSR
+  mem_rom_[hack++] = 0x4A;							// LSR
+  mem_rom_[hack++] = 0xB0; mem_rom_[hack++] = 0x61;				// BCS $F530 <=
+  
+  // Print LOADING
+  mem_rom_[hack++] = 0x20; mem_rom_[hack++] = 0xD2; mem_rom_[hack++] = 0xF5;	// JSR $F5D2
+  
+  // END
+  mem_rom_[hack++] = 0x18;							// CLC
+  mem_rom_[hack++] = 0xA6; mem_rom_[hack++] = 0xAE;				// LDX $AE
+  mem_rom_[hack++] = 0xA4; mem_rom_[hack++] = 0xAF;				// LDY $AF
+  mem_rom_[hack++] = 0x60;							// RTS
+  
+  
+  hack = 0xF605;	// KERNEL SAVE TO SERIAL BUS (Starts at $F4B8)
+    
+  // Tell FAT32 driver to load a program
+  mem_rom_[hack++] = 0xA9; mem_rom_[hack++] = 0x05;				// LDA #$05
+  mem_rom_[hack++] = 0x8D; mem_rom_[hack++] = 0x02; mem_rom_[hack++] = 0x00;	// STA $0002
+  
+  // Check the STATUS byte.  Print FILE NOT FOUND if not found
+  /*mem_rom_[hack++] = 0xA5; mem_rom_[hack++] = 0x90;				// LDA $90
+  mem_rom_[hack++] = 0x4A;							// LSR
+  mem_rom_[hack++] = 0x4A;							// LSR
+  mem_rom_[hack++] = 0xB0; mem_rom_[hack++] = 0x61;				// BCS $F530 <=
+  
+  // Print LOADING
+  mem_rom_[hack++] = 0x20; mem_rom_[hack++] = 0xD2; mem_rom_[hack++] = 0xF5;	// JSR $F5D2*/
+  
+  // END
+  mem_rom_[hack++] = 0x18;							// CLC
+  mem_rom_[hack++] = 0x60;							// RTS
+}
 

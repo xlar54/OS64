@@ -48,6 +48,7 @@ class Cia1
     uint8_t timer_b_input_mode_;
     unsigned int prev_cpu_cycles_;
     uint8_t pra_, prb_;
+    uint8_t ddra_, ddrb_;
   public:
     Cia1();
     void cpu(Cpu *v){ cpu_ = v;};

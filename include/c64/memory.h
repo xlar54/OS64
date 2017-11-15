@@ -89,6 +89,9 @@ class Memory
     /* vic memory access */
     uint8_t vic_read_byte(uint16_t addr);
     uint8_t read_byte_rom(uint16_t addr);
+    
+    void patch_roms();
+    
     /* load external binaries */
     //void load_rom(const std::string &f, uint16_t baseaddr);
     //void load_ram(const std::string &f, uint16_t baseaddr);
