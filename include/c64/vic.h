@@ -164,8 +164,13 @@ class Vic
     static const int kSpriteWidth = 24;
     static const int kSpriteHeight = 21;
     static const int kSpriteSize = 64;
+#ifdef _NO_BORDER_
+    static const int kSpritesFirstLine = 0;
+    static const int kSpritesFirstCol = 0;
+#else
     static const int kSpritesFirstLine = 6;
     static const int kSpritesFirstCol = 18;
+#endif
 };
 
 #endif

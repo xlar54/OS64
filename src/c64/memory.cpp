@@ -301,13 +301,15 @@ void Memory::patch_roms()
   //  mem_ram_[0xc000 + i] = speed2_bin[i];
   
   // Used to load a PRG file into RAM so it can be saved to disk
- /* uint16_t sz = yars_prg_size-2;
-  for(uint16_t i=2;i<sz-2;i++)
+  /*uint16_t sz = yars_prg_size;
+  for(uint16_t i=2;i<sz;i++)
     mem_ram_[0x0801+i-2] = yars_prg[i];
   
-  mem_ram_[0x2D] = (0x0801 + sz) & 0xFF; // poke low byte to 45  
-  mem_ram_[0x2E] = (0x0801 + sz) >> 8; // poke hi byte to 46
+  mem_ram_[0x2D] = (0x0801 + sz-2) & 0xFF; // poke low byte to 45  
+  mem_ram_[0x2E] = (0x0801 + sz-2) >> 8; // poke hi byte to 46
   */
+  // remember to do a CLR before running program
+  
   
   // keyboard modifications for keycode to match PC keyboard
   uint16_t hack = 0xEB81;	// std keys
