@@ -786,46 +786,48 @@ void Vic::draw_mcsprite(int x, int y, int sprite, int row)
 
 void Vic::draw_sprite(int x, int y, int sprite, int row)
 {
+  uint8_t swid = is_double_width_sprite(sprite) == true ? 2 : 1;
   uint16_t addr = get_sprite_ptr(sprite);
-  
-  for (int i=0; i < 3 ; i++)
+
+  for(int w=0;w<swid;w++)
   {
-    uint8_t data = mem_->vic_read_byte(addr + row * 3 + i);
-    
-    for (int j=0; j < 8; j++)
-    {
-      if(ISSET_BIT(data,j))
-      {
-	uint16_t newX = x + i*8 + 8 - j;
-	uint8_t left_right_border38 = 0;
-	uint8_t top_border_offset=0;
-	uint8_t btm_border_offset=0;
-	
-	// 38 col mode
-	if(!ISSET_BIT(cr2_,3)) 
-	  left_right_border38 = 8;
-	
-	// 24 line mode
-	if(!ISSET_BIT(cr1_,3)) 
+    for (int i=0; i < 3 ; i++)
+    { 
+      uint8_t data = mem_->vic_read_byte(addr + row * 3 + i);
+      
+      for (int j=0; j < 8; j++)
+      {  
+	if(ISSET_BIT(data,j))
 	{
-	  top_border_offset=2;
-	  btm_border_offset=4;
-	}
-	
-	if(newX <= kGFirstCol+left_right_border38 || y <= kGFirstCol + top_border_offset || 
-	  newX > kGResX+kGFirstCol-left_right_border38 || y >= kGResY+kGFirstCol - btm_border_offset)
-	{
-	  io_->screen_update_pixel(newX,y,border_color_);
-	}
-	else
-	{
-	  io_->screen_update_pixel(newX,y,sprite_colors_[sprite]);
+	  uint16_t newX = (x+w + (i*8*swid) + (8*swid) - (j*swid)) ;
+	  uint8_t side_border_offset = 0;
+	  uint8_t top_border_offset=0;
+	  uint8_t btm_border_offset=0;
+	  
+	  // 38 col mode
+	  if(!ISSET_BIT(cr2_,3)) 
+	    side_border_offset = 8;
+	  
+	  // 24 line mode
+	  if(!ISSET_BIT(cr1_,3)) 
+	  {
+	    top_border_offset=2;
+	    btm_border_offset=4;
+	  }
+
+	  if(newX <= kGFirstCol+side_border_offset || y <= kGFirstCol + top_border_offset || 
+	  newX > kGResX+kGFirstCol-side_border_offset || y >= kGResY+kGFirstCol - btm_border_offset)
+	  {
+	    io_->screen_update_pixel(newX,y,border_color_);
+	  }
+	  else
+	  {
+	    io_->screen_update_pixel(newX,y,sprite_colors_[sprite]);
+	  }
 	}
       }
     }
   }
-  
-
 }
 
 void Vic::draw_raster_sprites()
