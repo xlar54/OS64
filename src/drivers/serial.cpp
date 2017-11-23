@@ -60,6 +60,9 @@ using namespace myos::hardwarecommunication;
     
     void SerialDriver::Send(uint8_t c)
     {
+      while(PortIsBusy())
+      {};
+      
       dataReg.Write(c);
     }
     

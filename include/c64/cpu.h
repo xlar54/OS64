@@ -22,6 +22,16 @@
 #include <lib/stdint.h>
 #include <c64/memory.h>
 
+struct cpuState {
+
+  uint16_t pc;
+  uint8_t a;
+  uint8_t x;
+  uint8_t y;
+  uint8_t sp;
+};
+
+
 /**
  * @brief MOS 6510 microprocessor
  */
@@ -124,10 +134,15 @@ class Cpu
     inline void nop();
     inline void brk();
     inline void rti();
+    
+    void displayRegs();
+    uint8_t bytetoscreencode(uint8_t b);
+
   public:
+    void getCpuState(struct cpuState* currentCpuState);
     /* cpu state */
     void reset();
-    bool emulate();
+    bool emulate(bool step);
     /* memory */
     void memory(Memory *v){mem_ = v;};
     Memory* memory(){return mem_;};
@@ -163,9 +178,6 @@ class Cpu
     /* interrupts */
     void nmi();
     void irq();
-    /* debug */
-    void dump_regs();
-    void dump_regs_json();
 };
 
 /* macro helpers */

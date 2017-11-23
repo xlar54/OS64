@@ -14,10 +14,10 @@
     .long 0                  ; //20    u32    load_end_addr    if flags[16] is set
     .long 0                  ; //24    u32    bss_end_addr    if flags[16] is set
     .long 0                  ; //28    u32    entry_addr    if flags[16] is set
-    .long 1                  ; //32    u32    mode_type    if flags[2] is set      1 = text mode      0=gfx mode
-    .long 80                 ; //36    u32    width    if flags[2] is set         80 = columns
-    .long 24                 ; //40    u32    height    if flags[2] is set        24 = rows 
-    .long 0                  ; //44    u32    depth    if flags[2] is set          0 = for text mode
+    .long 0                  ; //32    u32    mode_type    if flags[2] is set      1 = text mode      0=gfx mode
+    .long 800                ; //36    u32    width    if flags[2] is set         80 = columns
+    .long 600                ; //40    u32    height    if flags[2] is set        24 = rows 
+    .long 8                 ; //44    u32    depth    if flags[2] is set          0 = for text mode
 
 .section .text
 .extern kernelMain

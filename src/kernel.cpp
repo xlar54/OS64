@@ -1,4 +1,5 @@
 
+#include <multiboot.h>
 #include <lib/stdint.h>
 #include <lib/vga.h>
 #include <lib/stdio.h>
@@ -8,6 +9,7 @@
 #include <syscalls.h>
 #include <hardwarecommunication/pci.h>
 #include <drivers/driver.h>
+#include <drivers/keyscancodes.h>
 #include <drivers/keyboard.h>
 #include <drivers/mouse.h>
 #include <drivers/ata.h>
@@ -17,6 +19,11 @@
 #include <filesystem/fat.h>
 #include <c64/c64.h>
 
+     
+multiboot_info_t *verified_mboot_hdr;
+uint32_t mboot_reserved_start;
+uint32_t mboot_reserved_end;
+uint32_t next_free_frame;
 
 using namespace myos;
 using namespace myos::drivers;
@@ -27,6 +34,7 @@ using namespace myos::filesystem;
 // other external data to c64's IO system
 
 C64* c64ptr;	
+uint32_t* framebuffer_addr;
 
 class IOKeyboardEventHandler : public KeyboardEventHandler
 {
@@ -46,15 +54,17 @@ public:
 	if (mode == 0) 
 	{ 
 	  mode = 1; 
-	  vga_set_mode(80,25,16);
-	  vga_cursorOn = 1;
+	  //vga_set_mode(80,25,16);
+	  //vga_cursorOn = 1;
+	  txtVideoRAM = (uint16_t*)framebuffer_addr;
+	  vga_textmode_clear();
 	  c64ptr->io_->mon_->Run();
 	  return;
 	}
 	else 
 	{ 
 	  mode = 0; 
-	  vga_set_mode(320,200,8);
+	  vga_set_mode(320,200,4);
 	  c64ptr->io_->init_color_palette();
 	  return;
 	}
@@ -89,8 +99,23 @@ extern "C" void callConstructors()
 
 extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot_magic*/)
 {
-    vga_set_mode(80,25,16);
+    //vga_set_mode(80,25,16);
   
+    multiboot_info_t * mboot_hdr = (multiboot_info_t *)multiboot_structure;
+    
+    if ((mboot_hdr->flags & (1<<6)) == 0) {
+        // The memory map is not present, we should probably halt the system
+        printf("Error: No Multiboot memory map was provided!\n");
+        while(1) {};
+    }
+    
+    verified_mboot_hdr = mboot_hdr;
+    mboot_reserved_start = (uint32_t)mboot_hdr;
+    mboot_reserved_end = (uint32_t)(mboot_hdr + sizeof(multiboot_info_t));
+    next_free_frame = 1;
+    framebuffer_addr = (uint32_t*)mboot_hdr->framebuffer_addr;
+    
+    
     printf("OS/64 Operating System Starting...\n");
  
     GlobalDescriptorTable gdt;
@@ -124,7 +149,6 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     SerialEventHandler serialhandler;
     SerialDriver serial(&interrupts, &serialhandler);
     drvManager.AddDriver(&serial);
-    //serial.Send('t');
     
     PeripheralComponentInterconnectController PCIController;
     PCIController.SelectDrivers(&drvManager, &interrupts);
@@ -197,7 +221,19 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     */
    
     SpeakerDriver speaker;
+         
+    printf("[OK]\n");
+    C64 c64;
+    c64ptr = &c64;
+    c64ptr->sid_->speaker(&speaker);
+    c64ptr->io_->vgaMem = (uint8_t*)mboot_hdr->framebuffer_addr;
+    c64ptr->io_->fat32(&fat32);
+    c64ptr->io_->mon_->fat32(&fat32);
+    c64ptr->io_->serial(&serial);
+    c64.start();
   
+    
+    
     if(vga_set_mode(320,200,8))
     {
       printf("[OK]\n");
@@ -206,6 +242,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
       c64ptr->sid_->speaker(&speaker);
       c64ptr->io_->fat32(&fat32);
       c64ptr->io_->mon_->fat32(&fat32);
+      c64ptr->io_->serial(&serial);
       c64.start();
     }
     else

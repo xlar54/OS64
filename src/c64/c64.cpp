@@ -63,7 +63,7 @@ C64::~C64()
   delete cia1_;
   delete cia2_;
   delete vic_;
-  //delete sid_;
+  delete sid_;
   delete io_;
 
 }
@@ -80,7 +80,7 @@ void C64::start()
     if(!cia2_->emulate())
       break;
     /* CPU */
-    if(!cpu_->emulate())
+    if(!cpu_->emulate(io_->step))
       break;
     /* VIC-II */
     if(!vic_->emulate())
@@ -88,11 +88,10 @@ void C64::start()
     /* IO */
     if(!io_->emulate())
       break;
-    /* callback */
-    //if(callback_ && !callback_())
-    //  break;
   }
 }
+
+
 
 
  

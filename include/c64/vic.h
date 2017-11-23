@@ -23,7 +23,7 @@
 #include <c64/cpu.h>
 #include <c64/memory.h>
 
-#define _NO_BORDER_
+//#define _NO_BORDER_
 
 /**
  * @brief MOS Video Interface Chip II (VIC-II)
@@ -71,6 +71,7 @@ class Vic
     uint16_t char_mem_;
     uint16_t bitmap_mem_;
     uint8_t  mem_pointers_;
+    int  vscrollPtr_;
     /* helpers */
     inline void raster_counter(int v);
     inline int raster_counter();
@@ -92,6 +93,7 @@ class Vic
     inline void draw_sprite(int x, int y, int sprite, int row);
     inline void draw_mcsprite(int x, int y, int sprite, int row);
     inline void draw_char(int x, int y, uint8_t data, uint8_t color);
+    inline void draw_ext_backcolor_char(int x, int y, uint8_t data, uint8_t color, uint8_t c);
     inline void draw_mcchar(int x, int y, uint8_t data, uint8_t color);
     inline void draw_bitmap(int x, int y, uint8_t data, uint8_t color);
     inline void draw_mcbitmap(int x, int y, uint8_t data, uint8_t scolor, uint8_t rcolor);
@@ -112,7 +114,7 @@ class Vic
     unsigned int frames(){return frame_c_;};
     /* constants */
     static const int kScreenLines = 312;
-    static const int kScreenCols  = 504;
+    //static const int kScreenCols  = 504;
 
 #ifdef _NO_BORDER_
     static const int kVisibleScreenWidth  = 320;
@@ -120,7 +122,7 @@ class Vic
     static const int kFirstVisibleLine = 0;
     static const int kLastVisibleLine = 200;
     static const int kLineCycles = 63;
-    static const int kBadLineCycles = 0;
+    static const int kBadLineCycles = 23;
     static const double kRefreshRate = 1 / 50.125; // ~50Hz (PAL)
 #else
     static const int kVisibleScreenWidth  = 403;

@@ -32,6 +32,7 @@ namespace myos
             ~KeyboardDriver();
             virtual uint32_t HandleInterrupt(uint32_t esp);
             virtual void Activate();
+	    virtual uint32_t HandleInterruptNew(uint32_t esp);
         };
 
     }

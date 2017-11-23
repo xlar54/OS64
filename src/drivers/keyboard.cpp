@@ -1,4 +1,5 @@
 
+#include <drivers/keyscancodes.h>
 #include <drivers/keyboard.h>
 
 using namespace myos::drivers;
@@ -155,8 +156,8 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	case 0x42: newKey=0xF8; break; //F8
 	case 0x43: newKey=0x02; break; //F9
 	case 0x44: newKey=0x03; break; //F10
-	//case 0x45: newKey=0x45; break; //NUMLOCK
-	//case 0x46: newKey=0x46; break; // SCROLL LOCK
+	case 0x45: newKey=0x91; break; //NUMLOCK
+	case 0x46: newKey=0x90; break; // SCROLL LOCK
 	case 0x47: newKey=0xFC; break; // HOME
 	case 0x48: newKey=0xFD; break; // 8 - up
 	//case 0x49: newKey='9'; break;
@@ -172,6 +173,151 @@ uint32_t KeyboardDriver::HandleInterrupt(uint32_t esp)
 	//case 0x53: newKey='.'; break;
 	//case 0x57: newKey=0x57; break; // F11
 	//case 0x58: newKey=0x58; break; // F12
+      }
+      
+      if(newKey !=0)
+      {
+	//printf("\nscancode=%02X",newKey);
+	if(pressed == 1)
+	  handler->OnKeyDown(newKey);
+	else
+	  handler->OnKeyUp(newKey);
+      }
+    }
+
+    return esp;
+}
+
+
+uint32_t KeyboardDriver::HandleInterruptNew(uint32_t esp)
+{
+    uint8_t key = dataport.Read();
+    
+    if(handler == 0)
+        return esp;
+    
+    // Extended keys
+    if(key == 0xE0)
+    {
+      key = dataport.Read();
+      
+      switch(key)
+      {
+	case 0x4B: handler->OnKeyDown(KEY_SCANCODE_LEFT); break;  // Cursor Left 
+	case 0x4D: handler->OnKeyDown(KEY_SCANCODE_RIGHT); break;  // Cursor Right 
+	case 0x47: handler->OnKeyDown(KEY_SCANCODE_HOME); break;  // Cursor Home
+	case 0x48: handler->OnKeyDown(KEY_SCANCODE_UP); break;  // Cursor Up  
+	case 0x50: handler->OnKeyDown(KEY_SCANCODE_DOWN); break;  // Cursor Down
+	
+	case 0xCB: handler->OnKeyUp(KEY_SCANCODE_LEFT); break;  // Cursor Left 
+	case 0xCD: handler->OnKeyUp(KEY_SCANCODE_RIGHT); break;  // Cursor Right 
+	case 0xC7: handler->OnKeyUp(KEY_SCANCODE_HOME); break;  // Cursor Home
+	case 0xC8: handler->OnKeyUp(KEY_SCANCODE_UP); break;  // Cursor Up  
+	case 0xD0: handler->OnKeyUp(KEY_SCANCODE_DOWN); break;  // Cursor Down
+      }
+      
+      return esp;
+
+    }
+    else
+    { 
+      uint8_t pressed = 1;
+      
+      if(key >= 0x80)
+      {
+	pressed = 0;
+	key = key-128;
+      }
+      
+      uint8_t newKey = KEY_SCANCODE_UNKNOWN;
+      
+      switch(key)
+      {
+	case 0x01: newKey=KEY_SCANCODE_ESCAPE; break;
+	case 0x02: newKey=KEY_SCANCODE_1; break;
+	case 0x03: newKey=KEY_SCANCODE_2; break;
+	case 0x04: newKey=KEY_SCANCODE_3; break;
+	case 0x05: newKey=KEY_SCANCODE_4; break;
+	case 0x06: newKey=KEY_SCANCODE_5; break;
+	case 0x07: newKey=KEY_SCANCODE_6; break;
+	case 0x08: newKey=KEY_SCANCODE_7; break;
+	case 0x09: newKey=KEY_SCANCODE_8; break;
+	case 0x0A: newKey=KEY_SCANCODE_9; break;
+	case 0x0B: newKey=KEY_SCANCODE_0; break;
+	case 0x0C: newKey=KEY_SCANCODE_MINUS; break;
+	case 0x0D: newKey=KEY_SCANCODE_EQUALS; break;
+	case 0x0E: newKey=KEY_SCANCODE_BACKSPACE; break;
+	case 0x0F: newKey=KEY_SCANCODE_TAB; break;
+	case 0x10: newKey=KEY_SCANCODE_Q; break;
+	case 0x11: newKey=KEY_SCANCODE_W; break;
+	case 0x12: newKey=KEY_SCANCODE_E; break;
+	case 0x13: newKey=KEY_SCANCODE_R; break;
+	case 0x14: newKey=KEY_SCANCODE_T; break;
+	case 0x15: newKey=KEY_SCANCODE_Y; break;
+	case 0x16: newKey=KEY_SCANCODE_U; break;
+	case 0x17: newKey=KEY_SCANCODE_I; break;
+	case 0x18: newKey=KEY_SCANCODE_O; break;
+	case 0x19: newKey=KEY_SCANCODE_P; break;
+	case 0x1A: newKey=KEY_SCANCODE_LEFTBRACKET; break;
+	case 0x1B: newKey=KEY_SCANCODE_RIGHTBRACKET; break;
+	case 0x1C: newKey=KEY_SCANCODE_RETURN; break;
+	case 0x1D: newKey=KEY_SCANCODE_LCTRL; break;
+	case 0x1E: newKey=KEY_SCANCODE_A; break;
+	case 0x1F: newKey=KEY_SCANCODE_S; break;
+	case 0x20: newKey=KEY_SCANCODE_D; break;
+	case 0x21: newKey=KEY_SCANCODE_F; break;
+	case 0x22: newKey=KEY_SCANCODE_G; break;
+	case 0x23: newKey=KEY_SCANCODE_H; break;
+	case 0x24: newKey=KEY_SCANCODE_J; break;
+	case 0x25: newKey=KEY_SCANCODE_K; break;
+	case 0x26: newKey=KEY_SCANCODE_L; break;
+	case 0x27: newKey=KEY_SCANCODE_SEMICOLON; break;
+	case 0x28: newKey=KEY_SCANCODE_APOSTROPHE; break;
+	case 0x29: newKey=KEY_SCANCODE_GRAVE; break;
+	case 0x2A: newKey=KEY_SCANCODE_LSHIFT; break;
+	case 0x2B: newKey=KEY_SCANCODE_BACKSLASH; break;
+	case 0x2C: newKey=KEY_SCANCODE_Z; break;
+	case 0x2D: newKey=KEY_SCANCODE_X; break;
+	case 0x2E: newKey=KEY_SCANCODE_C; break;
+	case 0x2F: newKey=KEY_SCANCODE_V; break;
+	case 0x30: newKey=KEY_SCANCODE_B; break;
+	case 0x31: newKey=KEY_SCANCODE_N; break;
+	case 0x32: newKey=KEY_SCANCODE_M; break;
+	case 0x33: newKey=KEY_SCANCODE_COMMA; break;
+	case 0x34: newKey=KEY_SCANCODE_PERIOD; break;
+	case 0x35: newKey=KEY_SCANCODE_SLASH; break;
+	case 0x36: newKey=KEY_SCANCODE_RSHIFT; break;
+	case 0x37: newKey=KEY_SCANCODE_KP_MULTIPLY; break;
+	case 0x38: newKey=KEY_SCANCODE_LALT; break;
+	case 0x39: newKey=KEY_SCANCODE_SPACE; break;
+	case 0x3A: newKey=KEY_SCANCODE_CAPSLOCK; break;
+	case 0x3B: newKey=KEY_SCANCODE_F1; break;
+	case 0x3C: newKey=KEY_SCANCODE_F2; break;
+	case 0x3D: newKey=KEY_SCANCODE_F3; break;
+	case 0x3E: newKey=KEY_SCANCODE_F4; break;
+	case 0x3F: newKey=KEY_SCANCODE_F5; break;
+	case 0x40: newKey=KEY_SCANCODE_F6; break;
+	case 0x41: newKey=KEY_SCANCODE_F7; break;
+	case 0x42: newKey=KEY_SCANCODE_F8; break;
+	case 0x43: newKey=KEY_SCANCODE_F9; break;
+	case 0x44: newKey=KEY_SCANCODE_F10; break;
+	case 0x45: newKey=KEY_SCANCODE_NUMLOCK; break;
+	case 0x46: newKey=KEY_SCANCODE_SCROLLLOCK; break;
+	case 0x47: newKey=KEY_SCANCODE_HOME; break;
+	case 0x48: newKey=KEY_SCANCODE_KP_8; break;
+	case 0x49: newKey=KEY_SCANCODE_KP_9; break;
+	case 0x4A: newKey=KEY_SCANCODE_KP_MINUS; break;
+	case 0x4B: newKey=KEY_SCANCODE_KP_4; break;
+	case 0x4C: newKey=KEY_SCANCODE_KP_5; break;
+	case 0x4D: newKey=KEY_SCANCODE_KP_6; break;
+	case 0x4E: newKey=KEY_SCANCODE_KP_PLUS; break;
+	case 0x4F: newKey=KEY_SCANCODE_KP_1; break;
+	case 0x50: newKey=KEY_SCANCODE_KP_2; break;
+	case 0x51: newKey=KEY_SCANCODE_KP_3; break;
+	case 0x52: newKey=KEY_SCANCODE_KP_0; break;
+	case 0x53: newKey=KEY_SCANCODE_KP_PERIOD; break;
+	case 0x57: newKey=KEY_SCANCODE_F11; break;
+	case 0x58: newKey=KEY_SCANCODE_F12; break;
       }
       
       if(newKey !=0)

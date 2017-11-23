@@ -63,6 +63,9 @@ IO::IO()
   mode = 0;
   retval_ = true;
   
+  cols_ = Vic::kVisibleScreenWidth;
+  rows_ = Vic::kVisibleScreenHeight;
+  
   vgaMem = (uint8_t*) 0xA0000;
   
 
@@ -155,10 +158,21 @@ uint8_t IO::getJoystick(uint8_t num)
   return 0;
 }
 
+void IO::SendSerial(uint8_t c)
+{
+  serial_->Send(c);
+}
+
 // keyboard handling /////////////////////////////////////////////////////////// 
 
 void IO::OnKeyDown(uint8_t c)
 {
+  if(c == 0x90)
+  {
+    step = !step;
+    return;
+  }
+  
   if(c == 0x2A) // shift 
     joy2 |= (1 << 4);	// fire
   
@@ -462,4 +476,3 @@ void IO::file_close()
 {
 
 }
-

@@ -32,6 +32,58 @@ void Cpu::reset()
   cycles_ = 6;
 }
 
+void Cpu::displayRegs()
+{
+  uint16_t screen = 0x07c0; //0x0400;
+  
+  mem_->write_byte(screen,0x10); mem_->write_byte(screen+1,0x03); mem_->write_byte(screen+2,0x3A); // PC:
+  
+  uint8_t b = bytetoscreencode((pc_ >> 8) >> 4);mem_->write_byte(screen+3,b);
+  b = bytetoscreencode((pc_ >> 8) & 0x0f); 	mem_->write_byte(screen+4,b);
+  b = bytetoscreencode((pc_ & 0x0f) >> 4); 	mem_->write_byte(screen+5,b); 
+  b = bytetoscreencode((pc_ & 0x0f) & 0x0f);  	mem_->write_byte(screen+6,b);
+  
+  mem_->write_byte(screen+8,0x01); mem_->write_byte(screen+9,0x3A); // A:
+  b = bytetoscreencode((a_ & 0x0f) >> 4); 	mem_->write_byte(screen+10,b); 
+  b = bytetoscreencode((a_ & 0x0f) & 0x0f);  	mem_->write_byte(screen+11,b);
+  
+  mem_->write_byte(screen+13,0x18); mem_->write_byte(screen+14,0x3A); // X:
+  b = bytetoscreencode((x_ & 0x0f) >> 4); 	mem_->write_byte(screen+15,b); 
+  b = bytetoscreencode((x_ & 0x0f) & 0x0f);  	mem_->write_byte(screen+16,b);
+  
+  mem_->write_byte(screen+18,0x19); mem_->write_byte(screen+19,0x3A); // Y:
+  b = bytetoscreencode((y_ & 0x0f) >> 4); 	mem_->write_byte(screen+20,b); 
+  b = bytetoscreencode((y_ & 0x0f) & 0x0f);  	mem_->write_byte(screen+21,b);
+  
+  mem_->write_byte(screen+23,0x13); mem_->write_byte(screen+24,0x10); mem_->write_byte(screen+25,0x3A); // SP:
+  b = bytetoscreencode((sp_ & 0x0f) >> 4); 	mem_->write_byte(screen+26,b); 
+  b = bytetoscreencode((sp_ & 0x0f) & 0x0f);  	mem_->write_byte(screen+27,b);
+}
+
+uint8_t Cpu::bytetoscreencode(uint8_t b)
+{
+  if(b < 0xa) b = b + 0x30;
+  else if(b == 0xa) b = 0x01;
+  else if(b == 0xb) b = 0x02;
+  else if(b == 0xc) b = 0x03;
+  else if(b == 0xd) b = 0x04;
+  else if(b == 0xe) b = 0x05;
+  else if(b == 0xf) b = 0x06;
+  
+  return b + 0x80;
+}
+
+void Cpu::getCpuState(struct cpuState* currentCpuState)
+{
+  currentCpuState->pc = pc_;
+  currentCpuState->a = a_;
+  currentCpuState->x = x_;
+  currentCpuState->y = y_;
+  currentCpuState->sp = sp_;
+  
+  return;
+}
+
 /** 
  * @brief emulate instruction 
  * @return returns false if something goes wrong (e.g. illegal instruction)
@@ -42,12 +94,19 @@ void Cpu::reset()
  * - Excess cycles due to page boundary crossing are not calculated
  * - Some known architectural bugs are not emulated
  */
-bool Cpu::emulate()
+bool Cpu::emulate(bool step)
 {
+  
+  if(step)
+    displayRegs();
+  
+  
+
   /* fetch instruction */
   uint8_t insn = fetch_op();
   bool retval = true;
   /* emulate instruction */
+  
   switch(insn)
   {
   /* BRK */

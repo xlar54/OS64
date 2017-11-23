@@ -285,21 +285,27 @@ uint8_t Memory::vic_read_byte(uint16_t addr)
   return v;
 }
 
+//#define ML_MON_C000
+
 void Memory::patch_roms()
 {
+#ifdef ML_MON_C000
   // ML monitor loaded to $C000
   for(uint16_t i=2; i < 4099; i++)
     mem_ram_[49152+(i-2)] = monitorC000[i];
   
+  // BRK vector to ML monitor
+  mem_ram_[0x0316] = 0x00;
+  mem_ram_[0x0317] = 0xC0;
+#endif
+  
+  // rem raster test sys2064
+  //for(int x=0; x<34;x++)
+  //  mem_ram_[0x0810 + x] = prg[x];
+  
   //for(uint16_t i=2; i < 4225; i++)
   //  mem_ram_[36864+(i-2)] = micromon[i];
-  
-  //for(uint16_t i=2; i < g_myData_Size; i++)
-  //  mem_ram_[49152+(i-2)] = g_myData[i];
-  
-  //for (uint16_t i=0; i<3687;i++)
-  //  mem_ram_[0xc000 + i] = speed2_bin[i];
-  
+
   // Used to load a PRG file into RAM so it can be saved to disk
   /*uint16_t sz = yars_prg_size;
   for(uint16_t i=2;i<sz;i++)

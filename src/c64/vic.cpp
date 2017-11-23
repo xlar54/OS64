@@ -48,6 +48,7 @@ Vic::Vic()
   mem_pointers_ = (1 << 0);
   /* current graphic mode */
   graphic_mode_ = kCharMode;
+  vscrollPtr_ = 0;
 }
 
 bool Vic::emulate()
@@ -65,27 +66,29 @@ bool Vic::emulate()
   if (cpu_->cycles() >= next_raster_at_)
   {
     int rstr = raster_counter();
+
     /* check raster IRQs */
-    if (raster_irq_enabled() &&
-        rstr == raster_irq_)
+    if (raster_irq_enabled() && rstr == raster_irq_)
     {
       /* set interrupt origin (raster) */
       irq_status_ |= (1<<0);
       /* raise interrupt */
       cpu_->irq();
     }
+    
     if (rstr >= kFirstVisibleLine && rstr < kLastVisibleLine)
     {
       // draw border
       int screen_y = rstr - kFirstVisibleLine;
 #ifndef _NO_BORDER_
       io_->screen_draw_border(screen_y,border_color_);
-#endif
+#endif     
       // draw raster on current graphic mode
       switch(graphic_mode_)
       {
       case kCharMode:
       case kMCCharMode:
+      case kExtBgMode:
         draw_raster_char_mode();
         break;
       case kBitmapMode:
@@ -154,7 +157,7 @@ uint8_t Vic::read_register(uint8_t r)
     break;
   /* raster counter */
   case 0x12:
-    retval = raster_c_;
+    retval = raster_c_; //+51; 	// hack - necessary for correct raster location when border is off
     break;
   /* sprite enable register */
   case 0x15:
@@ -282,7 +285,7 @@ void Vic::write_register(uint8_t r, uint8_t v)
     break;
   /* control register 1 */
   case 0x11:
-    cr1_ = (v&0x7f);
+    cr1_ = (v&0x7f);       
     raster_irq_ &= 0xff;
     raster_irq_ |= (v&0x80) << 1;
     set_graphic_mode();
@@ -415,7 +418,7 @@ void Vic::set_graphic_mode()
  */
 uint8_t Vic::get_screen_char(int column, int row)
 {
-  uint16_t addr = screen_mem_ + (row * kGCols) + column;
+  uint16_t addr = screen_mem_ + (row * kGCols) + column; 
   return mem_->vic_read_byte(addr);
 }
 
@@ -433,8 +436,15 @@ uint8_t Vic::get_char_color(int column, int row)
  */
 uint8_t Vic::get_char_data(int chr, int line)
 {
+  if(graphic_mode_ == kExtBgMode)
+  {
+    if(chr >= 64 && chr <= 127) chr = chr - 64;
+    else if(chr >= 128 && chr <= 191) chr = chr - 128;
+    else if(chr >= 192 && chr <= 255) chr = chr - 192;
+  }
+
   uint16_t addr = char_mem_ + (chr * 8) + line;
-  return mem_->vic_read_byte(addr);
+  uint8_t b = mem_->vic_read_byte(addr);
 }
 
 /**
@@ -467,16 +477,81 @@ void Vic::draw_char(int x, int y, uint8_t data, uint8_t color)
     /* don't draw outside (due to horizontal scroll) */
     if(xoffs > kGFirstCol + kGResX)
       continue;
+    
+    // 38 column mode    
+    if(!ISSET_BIT(cr2_,3))
+    {
+      if ((xoffs <= kGFirstCol+8) || (xoffs >= kGFirstCol+8 +kGResX-16)) 
+      {
+	io_->screen_update_pixel(xoffs,y,border_color_);
+	continue;
+      }
+    }
+    
+    // 24 line mode
+    if(!ISSET_BIT(cr1_,3))
+    {
+      if (y<=kGFirstLine-12 || y>=kGLastLine-18)
+      {
+	io_->screen_update_pixel(xoffs,y,border_color_);
+	continue;
+      }
+    }
+    
     /* draw pixel */
     if(ISSET_BIT(data,i))
     {
-      io_->screen_update_pixel(
-        xoffs, 
-        y,
-        color);
+      io_->screen_update_pixel(xoffs,y,color);
     }
   }
 }
+
+void Vic::draw_ext_backcolor_char(int x, int y, uint8_t data, uint8_t color, uint8_t c)
+{
+  for(int i=0 ; i < 8 ; i++)
+  {
+    int xoffs = x + 8 - i + horizontal_scroll();
+    /* don't draw outside (due to horizontal scroll) */
+    if(xoffs > kGFirstCol + kGResX)
+      continue;
+    
+    // 38 column mode    
+    if(!ISSET_BIT(cr2_,3))
+    {
+      if ((xoffs <= kGFirstCol+8) || (xoffs >= kGFirstCol+8 +kGResX-16)) 
+      {
+	io_->screen_update_pixel(xoffs,y,border_color_);
+	continue;
+      }
+    }
+    
+    // 24 line mode
+    if(!ISSET_BIT(cr1_,3))
+    {
+      if (y<=kGFirstLine-12 || y>=kGLastLine-18)
+      {
+	io_->screen_update_pixel(xoffs,y,border_color_);
+	continue;
+      }
+    }
+       
+    /* draw pixel */
+    if(ISSET_BIT(data,i))
+    {
+      io_->screen_update_pixel(xoffs,y,color);
+    }
+    else
+    {
+      if(c >=64 && c <= 127)
+	io_->screen_update_pixel(xoffs,y,bgcolor_[1]);
+      if(c >=128 && c <= 191)
+	io_->screen_update_pixel(xoffs,y,bgcolor_[2]);
+      if(c >=192 && c <= 255)
+	io_->screen_update_pixel(xoffs,y,bgcolor_[3]);
+    }
+  }
+}
+
 
 void Vic::draw_mcchar(int x, int y, uint8_t data, uint8_t color)
 {
@@ -501,15 +576,31 @@ void Vic::draw_mcchar(int x, int y, uint8_t data, uint8_t color)
       c = color;
       break;
     }
+    
     int xoffs = x + 8 - i * 2 + horizontal_scroll();
-    io_->screen_update_pixel(
-      xoffs,
-      y,
-      c);
-    io_->screen_update_pixel(
-      xoffs + 1,
-      y,
-      c);
+    
+    // 38 column mode    
+    if(!ISSET_BIT(cr2_,3))
+    {
+      if ((xoffs <= kGFirstCol+8) || (xoffs >= kGFirstCol+8 +kGResX-16)) 
+      {
+	io_->screen_update_pixel(xoffs,y,border_color_);
+	continue;
+      }
+    }
+    
+    // 24 line mode
+    if(!ISSET_BIT(cr1_,3))
+    {
+      if (y<=kGFirstLine-12 || y>=kGLastLine-18)
+      {
+	io_->screen_update_pixel(xoffs,y,border_color_);
+	continue;
+      }
+    }
+    
+    io_->screen_update_pixel(xoffs,y,c);
+    io_->screen_update_pixel(xoffs + 1,y,c);
   }
 }
 
@@ -517,30 +608,41 @@ void Vic::draw_raster_char_mode()
 {
   int rstr = raster_counter();
   int y = rstr - kFirstVisibleLine;
-  if((rstr >= kGFirstLine) && 
-     (rstr < kGLastLine) && 
-     !is_screen_off())
+
+  if((rstr >= kGFirstLine) && (rstr < kGLastLine) && !is_screen_off())
   {
     /* draw background */
-    io_->screen_draw_rect(kGFirstCol,y,kGResX,bgcolor_[0]);
+    if(!ISSET_BIT(cr2_,3)) // 38 columns
+      io_->screen_draw_rect(kGFirstCol+8,y,kGResX-16,bgcolor_[0]);
+    else
+      io_->screen_draw_rect(kGFirstCol,y,kGResX,bgcolor_[0]);
+    
     /* draw characters */
     for(int column=0; column < kGCols ; column++)
-    {
+    {  
+      vscrollPtr_  = (cr1_ & 7)-3;
+
       int x = kGFirstCol + column * 8;
-      int line = rstr - kGFirstLine;
-      int row = line/8;
-      int char_row = line % 8;
-      /* retrieve screen character */
-      uint8_t c = get_screen_char(column,row);
-      /* retrieve character bitmap data */
-      uint8_t data = get_char_data(c,char_row);
-      /* retrieve color data */
-      uint8_t color  = get_char_color(column,row);
-      /* draw character */
-      if(graphic_mode_ == kMCCharMode && ISSET_BIT(color,3))
-        draw_mcchar(x,y,data,(color&0x7));
-      else
-        draw_char(x,y,data,color);
+      int line = rstr - kGFirstLine - vscrollPtr_;
+      //if(line >= 0 && line <=200) 
+      //{
+	int row = line/8;
+	int char_row = line % 8;
+	/* retrieve screen character */
+	uint8_t c = get_screen_char(column,row);
+	/* retrieve character bitmap data */
+	uint8_t data = get_char_data(c,char_row);
+	/* retrieve color data */
+	uint8_t color  = get_char_color(column,row);
+	
+	/* draw character */
+	if(graphic_mode_ == kMCCharMode && ISSET_BIT(color,3))
+	  draw_mcchar(x,y,data,(color&0x7));
+	else if(graphic_mode_ == kCharMode)
+	  draw_char(x,y,data,color);
+	else if(graphic_mode_ == kExtBgMode)
+	  draw_ext_backcolor_char(x,y,data,color,c);
+      //}
     }
   }
 }
@@ -685,20 +787,45 @@ void Vic::draw_mcsprite(int x, int y, int sprite, int row)
 void Vic::draw_sprite(int x, int y, int sprite, int row)
 {
   uint16_t addr = get_sprite_ptr(sprite);
+  
   for (int i=0; i < 3 ; i++)
   {
-    uint8_t  data = mem_->vic_read_byte(addr + row * 3 + i);
+    uint8_t data = mem_->vic_read_byte(addr + row * 3 + i);
+    
     for (int j=0; j < 8; j++)
     {
       if(ISSET_BIT(data,j))
       {
-        io_->screen_update_pixel(
-          x + i*8 + 8 - j,          
-          y,
-          sprite_colors_[sprite]);
+	uint16_t newX = x + i*8 + 8 - j;
+	uint8_t left_right_border38 = 0;
+	uint8_t top_border_offset=0;
+	uint8_t btm_border_offset=0;
+	
+	// 38 col mode
+	if(!ISSET_BIT(cr2_,3)) 
+	  left_right_border38 = 8;
+	
+	// 24 line mode
+	if(!ISSET_BIT(cr1_,3)) 
+	{
+	  top_border_offset=2;
+	  btm_border_offset=4;
+	}
+	
+	if(newX <= kGFirstCol+left_right_border38 || y <= kGFirstCol + top_border_offset || 
+	  newX > kGResX+kGFirstCol-left_right_border38 || y >= kGResY+kGFirstCol - btm_border_offset)
+	{
+	  io_->screen_update_pixel(newX,y,border_color_);
+	}
+	else
+	{
+	  io_->screen_update_pixel(newX,y,sprite_colors_[sprite]);
+	}
       }
     }
   }
+  
+
 }
 
 void Vic::draw_raster_sprites()
@@ -717,7 +844,13 @@ void Vic::draw_raster_sprites()
          sp_y >= my_[n] && 
          sp_y < my_[n] + height)
       {
-        int row = sp_y - my_[n];
+        int row = 0;  //sp_y - my_[n];
+	
+	if(is_double_height_sprite(n))
+	  row = (int)(sp_y-my_[n]) / 2;
+	else
+	  row = sp_y - my_[n];
+	
         int x = kSpritesFirstCol + sprite_x(n);
         if(is_multicolor_sprite(n))
         {
@@ -725,7 +858,7 @@ void Vic::draw_raster_sprites()
         }
         else
         {
-          draw_sprite(x,y,n,row);
+	  draw_sprite(x,y,n,row);
         }
       }
     }
@@ -736,8 +869,12 @@ void Vic::draw_raster_sprites()
 
 void Vic::raster_counter(int v)
 {
-  raster_c_ = (uint8_t)(v&0xff);
-  cr1_ &= 0x7f;
+  // For PAL machines, raster can be between 0-319
+  // raster_c ($D012) can be between 0-255
+  // cr1's ($D011) 7th bit becomes the 8th bit of raster (for 256-319)
+  
+  raster_c_ = (uint8_t)(v&0xff); 	
+  cr1_ &= 0x7f;				
   cr1_ |= ((v >> 1)&0x80);
 }
 
@@ -774,9 +911,8 @@ bool Vic::is_screen_off()
 bool Vic::is_bad_line()
 {
   int rstr = raster_counter();
-  return (rstr >= 0x30 &&
-          rstr <= 0xf7 &&
-          (rstr & 0x7) == (vertical_scroll() & 0x7));
+  
+  return (rstr >= 0x30 && rstr <= 0xf7 && (rstr & 0x7) == (vertical_scroll() & 0x7));
 }
 
 /**

@@ -30,7 +30,6 @@
 #include <c64/io.h>
 #include <c64/monitor.h>
 
-
 /**
  * @brief Commodore 64
  * 
@@ -47,6 +46,7 @@ class C64
     //std::function<bool()> callback_;
 
   public:
+    
     Memory *mem_;
     Monitor *mon_;
     IO *io_;
@@ -60,6 +60,8 @@ class C64
     Memory * memory(){return mem_;};
     IO * io(){return io_;};
     Monitor* monitor(){return mon_;};
+    
+    struct cpuState* getCpuState();
 };
 
 #endif
