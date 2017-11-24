@@ -338,7 +338,10 @@ void Memory::patch_roms()
   
   hack = 0x28A;
   mem_ram_[hack] = 64;		// Disable key repeat (for fast machines)
+
+#define DOS_PATCH
   
+#ifdef DOS_PATCH
   //kernel hack for ide drive access
   hack = 0xF4C4;	// KERNEL LOAD FROM SERIAL BUS (Starts at $F4B8)
     
@@ -380,5 +383,7 @@ void Memory::patch_roms()
   // END
   mem_rom_[hack++] = 0x18;							// CLC
   mem_rom_[hack++] = 0x60;							// RTS
+  
+#endif
 }
 

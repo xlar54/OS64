@@ -12,10 +12,19 @@
 #include <filesystem/fat.h>
 #include <drivers/serial.h>
 
+//#define _NO_BORDER_
+
+#ifndef _NO_BORDER_
 #define VIRT_WIDTH 403
 #define VIRT_HEIGHT 284
-#define SCREEN_WIDTH  800
-#define SCREEN_HEIGHT 600
+#else
+#define VIRT_WIDTH 320
+#define VIRT_HEIGHT 200
+#endif
+
+#define SCREEN_WIDTH  640
+#define SCREEN_HEIGHT 480
+
 
 using namespace myos::hardwarecommunication;
 using namespace myos::filesystem;
@@ -76,6 +85,7 @@ public:
     IO();
     ~IO();
     uint8_t *vgaMem;					// pointer to the offset of VGA memory
+    uint32_t *pitch;
     Monitor *mon_;
     bool emulate();
     void process_events();
@@ -119,7 +129,7 @@ public:
 	  }
 	for(int x=0;x<SCREEN_WIDTH*SCREEN_HEIGHT;x+=4)
 	  *(uint32_t*)(vgaMem+x) = *(uint32_t*)(pscreen+x);
-
+	
 	skipframes = 0;
       }
       
@@ -130,6 +140,7 @@ public:
     };
 
    inline void screen_update_pixel(int x, int y, int color) { 
+
      *(vscreen + VIRT_WIDTH * y + x) = (uint8_t) color;
    };
 };

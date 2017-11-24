@@ -54,8 +54,8 @@ public:
 	if (mode == 0) 
 	{ 
 	  mode = 1; 
-	  //vga_set_mode(80,25,16);
-	  //vga_cursorOn = 1;
+	  vga_set_mode(80,25,16);
+	  vga_cursorOn = 1;
 	  txtVideoRAM = (uint16_t*)framebuffer_addr;
 	  vga_textmode_clear();
 	  c64ptr->io_->mon_->Run();
@@ -64,7 +64,7 @@ public:
 	else 
 	{ 
 	  mode = 0; 
-	  vga_set_mode(320,200,4);
+	  vga_set_mode(320,200,8);
 	  c64ptr->io_->init_color_palette();
 	  return;
 	}
@@ -221,12 +221,14 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     */
    
     SpeakerDriver speaker;
-         
+    
+    
     printf("[OK]\n");
     C64 c64;
     c64ptr = &c64;
     c64ptr->sid_->speaker(&speaker);
     c64ptr->io_->vgaMem = (uint8_t*)mboot_hdr->framebuffer_addr;
+    c64ptr->io_->pitch = (uint32_t*)mboot_hdr->framebuffer_pitch;
     c64ptr->io_->fat32(&fat32);
     c64ptr->io_->mon_->fat32(&fat32);
     c64ptr->io_->serial(&serial);
