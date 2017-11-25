@@ -49,7 +49,7 @@ public:
     void OnKeyDown(uint8_t c)
     {
       // ESC key will toggle between text mode and emulation
-      if(c == 0x01) 
+      /*if(c == 0x01) 
       {
 	if (mode == 0) 
 	{ 
@@ -68,7 +68,7 @@ public:
 	  c64ptr->io_->init_color_palette();
 	  return;
 	}
-      }
+      }*/
       
       switch(mode)
       {
@@ -224,18 +224,26 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     
     printf("[OK]\n");
+       
+    printf("\n\nScreen %d X %d X %d - Pitch %d", (uint32_t)mboot_hdr->framebuffer_width,
+	   (uint32_t)mboot_hdr->framebuffer_height, (uint8_t)mboot_hdr->framebuffer_bpp,
+	   (uint32_t)mboot_hdr->framebuffer_pitch);
+    
+
     C64 c64;
     c64ptr = &c64;
     c64ptr->sid_->speaker(&speaker);
-    c64ptr->io_->vgaMem = (uint8_t*)mboot_hdr->framebuffer_addr;
-    c64ptr->io_->pitch = (uint32_t*)mboot_hdr->framebuffer_pitch;
+    c64ptr->io_->init_display((uint32_t*)mboot_hdr->framebuffer_addr, (uint32_t)mboot_hdr->framebuffer_width,
+			 (uint32_t)mboot_hdr->framebuffer_height, (uint32_t)mboot_hdr->framebuffer_pitch, 
+			 (uint8_t)mboot_hdr->framebuffer_bpp);
+    
     c64ptr->io_->fat32(&fat32);
     c64ptr->io_->mon_->fat32(&fat32);
     c64ptr->io_->serial(&serial);
     c64.start();
   
     
-    
+    /*
     if(vga_set_mode(320,200,8))
     {
       printf("[OK]\n");
@@ -251,7 +259,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     {
       printf("[FAILED]\n");
       while(1) {};
-    }
+    }*/
   
     
 }

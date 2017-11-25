@@ -22,10 +22,6 @@
 #define VIRT_HEIGHT 200
 #endif
 
-#define SCREEN_WIDTH  640
-#define SCREEN_HEIGHT 480
-
-
 using namespace myos::hardwarecommunication;
 using namespace myos::filesystem;
 using namespace myos::drivers;
@@ -46,7 +42,8 @@ class IO
     uint32_t *frame_;
     size_t cols_;
     size_t rows_;
-    unsigned int color_palette[16];
+    //unsigned int color_palette[16];
+    uint16_t color_palette[16];
     uint8_t keyboard_matrix_[8];
     bool retval_;
     /* keyboard mappings */
@@ -76,16 +73,24 @@ class IO
     
     SerialDriver *serial_;
 
-    uint8_t vscreen[VIRT_WIDTH*VIRT_HEIGHT]; 		// pointer to the offset of virtual screen.
-    uint8_t pscreen[SCREEN_WIDTH*SCREEN_HEIGHT]; 
-    double scaleWidth =  (double)SCREEN_WIDTH / (double)VIRT_WIDTH;
-    double scaleHeight = (double)SCREEN_HEIGHT / (double)VIRT_HEIGHT;
+    uint8_t *vscreen_; 		// pointer to the offset of virtual screen.
+    uint8_t *pscreen_;
+    double scaleWidth;
+    double scaleHeight;
+    
+    uint8_t *vgaMem_;
+    uint32_t screen_width_;
+    uint32_t screen_height_;
+    uint32_t screen_pitch_;
+    uint8_t screen_bpp_;
+    uint8_t pixel_width_;
+    
 
 public:
     IO();
     ~IO();
-    uint8_t *vgaMem;					// pointer to the offset of VGA memory
-    uint32_t *pitch;
+    void init_display(uint32_t* vgaMemAddress, uint32_t width, uint32_t height, uint32_t pitch, uint8_t bpp);
+
     Monitor *mon_;
     bool emulate();
     void process_events();
@@ -106,43 +111,45 @@ public:
     
     void type_character(char c);
     inline uint8_t keyboard_matrix_row(int col){return keyboard_matrix_[col];};
-    inline void screen_draw_rect(int x, int y, int n, uint8_t color) {
+    
+    inline void screen_update_pixel(int x, int y, int color) { 
+      *(vscreen_ + y * VIRT_WIDTH  + x) = color;
+    };
+    
+    inline void screen_draw_rect(int x, int y, int n, int color) {
       for(int i=1; i <= n ; i++)
-	*(vscreen + VIRT_WIDTH * y + x + i) = color;
+	*(vscreen_ + y * VIRT_WIDTH + x + i) = color;
     };
+    
     inline void screen_draw_border(int y, int color) {
-        for(int i=0; i < cols_ ; i++)
-	  *(vscreen + VIRT_WIDTH * y + i) = (uint8_t) color;
+      for(int i=0; i < cols_ ; i++)
+	*(vscreen_ + y * VIRT_WIDTH  + i) = color;
     };
+    
     inline void screen_refresh() {
       
-      static uint8_t skipframes = 5;
-      if(skipframes == 5)
+      static uint8_t skipframes = 10;
+      if(skipframes == 10)
       {
-	for(int cy = 0; cy < SCREEN_HEIGHT; cy++)
-	  {
-	      for(int cx = 0; cx < SCREEN_WIDTH; cx++)
-	      {
-		  int nearestMatch =  (((int)(cy / scaleHeight) * VIRT_WIDTH) + ((int)(cx / scaleWidth)) );
-		  pscreen[cy * SCREEN_WIDTH + cx] = vscreen[nearestMatch];
-	      }
-	  }
-	for(int x=0;x<SCREEN_WIDTH*SCREEN_HEIGHT;x+=4)
-	  *(uint32_t*)(vgaMem+x) = *(uint32_t*)(pscreen+x);
+	for(int cy = 0; cy < screen_height_; cy++)
+	{
+	    for(int cx = 0; cx < screen_pitch_; cx++)
+	    {
+		int nearestMatch =  (((int)(cy / scaleHeight) * VIRT_WIDTH) + ((int)(cx / scaleWidth)));
+		pscreen_[cy * screen_pitch_ + cx] = vscreen_[nearestMatch];
+	    }
+	}
+	
+	for(int x=0;x<screen_pitch_*screen_height_;x+=pixel_width_)
+	{
+	  *(vgaMem_+x) = color_palette[*(pscreen_+x)] & 255;
+	  *(vgaMem_+x+1) = (color_palette[*(pscreen_+x)] >> 8) & 255;
+	}
 	
 	skipframes = 0;
       }
-      
       skipframes++;
-      
-      //for(int x=0;x<SCREEN_WIDTH*SCREEN_HEIGHT;x+=4)
-	//*(uint32_t*)(vgaMem+x) = *(uint32_t*)(vscreen+x);
     };
-
-   inline void screen_update_pixel(int x, int y, int color) { 
-
-     *(vscreen + VIRT_WIDTH * y + x) = (uint8_t) color;
-   };
 };
 
 #endif
