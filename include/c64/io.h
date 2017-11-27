@@ -5,7 +5,6 @@
 #include <lib/vga.h>
 #include <c64/cpu.h>
 #include <c64/memory.h>
-#include <c64/monitor.h>
 
 #include <drivers/keyscancodes.h>
 #include <drivers/ata.h>
@@ -26,8 +25,6 @@ using namespace myos::hardwarecommunication;
 using namespace myos::filesystem;
 using namespace myos::drivers;
 
-class Monitor;
-
 /**
  * @brief IO devices
  *
@@ -43,7 +40,7 @@ class IO
     size_t cols_;
     size_t rows_;
     //unsigned int color_palette[16];
-    uint16_t color_palette[16];
+    
     uint8_t keyboard_matrix_[8];
     bool retval_;
     /* keyboard mappings */
@@ -84,24 +81,22 @@ class IO
     uint32_t screen_pitch_;
     uint8_t screen_bpp_;
     uint8_t pixel_width_;
-    
 
 public:
     IO();
     ~IO();
     void init_display(uint32_t* vgaMemAddress, uint32_t width, uint32_t height, uint32_t pitch, uint8_t bpp);
 
-    Monitor *mon_;
     bool emulate();
     void process_events();
     void cpu(Cpu *v){cpu_=v;};
     void memory(Memory *m) {mem_ = m;};
-    void monitor(Monitor *m) {mon_ = m;};
     void fat32(Fat32 *m) { fat32_ = m; };
     void serial(SerialDriver *m) { serial_ = m; };
     
     bool step = false;
-
+    uint16_t color_palette[16];
+    
     void init_color_palette();
     void init_keyboard();
     void OnKeyDown(uint8_t c);
@@ -111,6 +106,12 @@ public:
     
     void type_character(char c);
     inline uint8_t keyboard_matrix_row(int col){return keyboard_matrix_[col];};
+    
+    inline void put_pixel(int x,int y, int color) {
+      unsigned char *pixel = vgaMem_ + y*screen_pitch_ + x*pixel_width_;     
+      *pixel = color_palette[color] & 255;              
+      *(pixel + 1) = (color_palette[color] >> 8) & 255;
+    };
     
     inline void screen_update_pixel(int x, int y, int color) { 
       *(vscreen_ + y * VIRT_WIDTH  + x) = color;

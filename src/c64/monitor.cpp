@@ -8,24 +8,39 @@
 #include <c64/memory.h>
 #include <lib/string.h>
 #include <lib/stdlib.h>
+#include <lib/vga.h>
 
 Monitor::Monitor()
 {
   bufPtr = 0;
+ 
 }
 
 Monitor::~Monitor()
 {
 }
 
-void Monitor::Run()
+void Monitor::Start()
 {
-  printf("OS/64 - Debugging:\n\n");
+  isRunning = true; 
+  vga_clear();
+  vga_cursor_enable();
+  
+  printf("OS/64 v0.10 - Debugging:\n\n");
   printf("====================================================\n");
+  
   help();
   
   prompt();
   
+  while (isRunning)
+  {
+  }
+}
+
+void Monitor::Stop()
+{
+  isRunning = false;
 }
 
 void Monitor::OnKeyDown(uint8_t c)
@@ -100,7 +115,6 @@ void Monitor::prompt()
     buf[x] = 0;
   
   bufPtr = 0;
-  
   printf("\n>");
 }
 
@@ -114,7 +128,7 @@ void Monitor::process_cmd()
   int p1=0;
   int p2=0;
   int p3=0;
-  
+   
   if(bufPtr==0)
     return;  
   

@@ -91,6 +91,7 @@ class Memory
     uint8_t read_byte_rom(uint16_t addr);
     
     void patch_roms();
+    void patch_ram();
     
     /* load external binaries */
     //void load_rom(const std::string &f, uint16_t baseaddr);

@@ -39,27 +39,26 @@
 class C64
 {
   private:
-    Cpu *cpu_;
-    Cia1 *cia1_;
-    Cia2 *cia2_;
-    Vic *vic_;
-    //std::function<bool()> callback_;
-
-  public:
+    bool isRunning = true;
     
-    Memory *mem_;
-    Monitor *mon_;
-    IO *io_;
-    Sid *sid_;
+  public: 
     C64();
     ~C64();
+    Cpu *cpu_;
+    Cia1 *cia1_;
+    Cia2 *cia2_;  
+    Memory *mem_;
+    IO *io_;
+    Sid *sid_;
+    Vic *vic_;
+    Monitor *mon_;
+    bool reset = false;
     void start();
-    //void emscripten_loop();
-    //void callback(std::function<bool()> cb){callback_ = cb;};
+    void stop();
+
     Cpu * cpu(){return cpu_;};
     Memory * memory(){return mem_;};
     IO * io(){return io_;};
-    Monitor* monitor(){return mon_;};
     
     struct cpuState* getCpuState();
 };

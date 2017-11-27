@@ -30,3 +30,17 @@ void SpeakerDriver::Nosound()
 {
  outb(0x61 , inb(0x61) & 0xFC );
 }
+
+// Basic port Functions
+void SpeakerDriver::outb(uint16_t port, uint8_t value) 
+{
+  //("a" puts value in eax, "dN" puts port in edx or uses 1-byte constant.)
+  asm volatile ("outb %0, %1" :: "a" (value), "dN" (port));
+}
+
+uint8_t SpeakerDriver::inb(uint16_t port)
+{
+    uint8_t result;
+    asm volatile("inb %1, %0" : "=a" (result) : "Nd" (port));
+    return result;
+}

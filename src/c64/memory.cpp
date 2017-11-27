@@ -34,10 +34,14 @@ Memory::Memory()
   mem_ram_ = new uint8_t[kMemSize]();
   mem_rom_ = new uint8_t[kMemSize]();
   
+  // initialize RAM
+  for (int i=0;i<kMemSize;mem_ram_[i] = (i>>1)<<1==i ? 0 : 0xFF, i++);
+  
   /* configure memory layout */
   setup_memory_banks(kLORAM|kHIRAM|kCHAREN);
   /* configure data directional bits */
   write_byte_no_io(kAddrDataDirection,0x2f);
+   
 }
 
 Memory::~Memory()
@@ -73,10 +77,7 @@ void Memory::setup_memory_banks(uint8_t v)
   for(uint16_t i=0; i < 8192; i++)
     mem_rom_[kBaseAddrKernal+i] = kernalRomC64[i];
   
-   
-  //load_rom("basic.901226-01.bin",kBaseAddrBasic);
-  //load_rom("characters.901225-01.bin",kBaseAddrChars);
-  //load_rom("kernal.901227-03.bin",kBaseAddrKernal);
+  patch_roms();
   
   /* kernal */
   if (hiram) 
@@ -93,9 +94,7 @@ void Memory::setup_memory_banks(uint8_t v)
     banks_[kBankCharen] = kROM;
   /* write the config to the zero page */
   write_byte_no_io(kAddrMemoryLayout, v);
-  
-  patch_roms();
-  
+
 }
 
 /**
@@ -155,6 +154,10 @@ void Memory::write_byte(uint16_t addr, uint8_t v)
   else
   {   
     mem_ram_[addr] = v;
+    
+    if(addr==313 && v==255)
+      // install custom applications to RAM
+      patch_ram();
   }
 }
 
@@ -286,8 +289,9 @@ uint8_t Memory::vic_read_byte(uint16_t addr)
 }
 
 //#define ML_MON_C000
+#define ML_MON_9000
 
-void Memory::patch_roms()
+void Memory::patch_ram()
 {
 #ifdef ML_MON_C000
   // ML monitor loaded to $C000
@@ -298,25 +302,35 @@ void Memory::patch_roms()
   mem_ram_[0x0316] = 0x00;
   mem_ram_[0x0317] = 0xC0;
 #endif
-  
+   
   // rem raster test sys2064
   //for(int x=0; x<34;x++)
   //  mem_ram_[0x0810 + x] = prg[x];
-  
-  //for(uint16_t i=2; i < 4225; i++)
-  //  mem_ram_[36864+(i-2)] = micromon[i];
 
+#ifdef ML_MON_9000  
+  for(uint16_t i=2; i < 4225; i++)
+    mem_ram_[0x9000+(i-2)] = micromon[i];
+  
+  // BRK vector to ML monitor
+  mem_ram_[0x0316] = 0x00;
+  mem_ram_[0x0317] = 0x90;
+#endif
+  
   // Used to load a PRG file into RAM so it can be saved to disk
-  /*uint16_t sz = yars_prg_size;
+  /*
+  uint16_t sz = paku_prg_size;
+  uint16_t loadAddr = (paku_prg[1] << 8) + paku_prg[0];
   for(uint16_t i=2;i<sz;i++)
-    mem_ram_[0x0801+i-2] = yars_prg[i];
+    mem_ram_[loadAddr++] = paku_prg[i];
   
   mem_ram_[0x2D] = (0x0801 + sz-2) & 0xFF; // poke low byte to 45  
   mem_ram_[0x2E] = (0x0801 + sz-2) >> 8; // poke hi byte to 46
   */
   // remember to do a CLR before running program
-  
-  
+}
+
+void Memory::patch_roms()
+{
   // keyboard modifications for keycode to match PC keyboard
   uint16_t hack = 0xEB81;	// std keys
   mem_rom_[hack+46] = 0x5B;	// PETSCII for [

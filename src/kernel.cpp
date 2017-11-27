@@ -18,8 +18,9 @@
 #include <multitasking.h>
 #include <filesystem/fat.h>
 #include <c64/c64.h>
+#include <c64/monitor.h>
 
-     
+multiboot_info_t* mboot_hdr;     
 multiboot_info_t *verified_mboot_hdr;
 uint32_t mboot_reserved_start;
 uint32_t mboot_reserved_end;
@@ -49,31 +50,32 @@ public:
     void OnKeyDown(uint8_t c)
     {
       // ESC key will toggle between text mode and emulation
-      /*if(c == 0x01) 
+      if(c == 0x01) 
       {
 	if (mode == 0) 
 	{ 
 	  mode = 1; 
-	  vga_set_mode(80,25,16);
-	  vga_cursorOn = 1;
-	  txtVideoRAM = (uint16_t*)framebuffer_addr;
-	  vga_textmode_clear();
-	  c64ptr->io_->mon_->Run();
+	  c64ptr->stop();
 	  return;
 	}
 	else 
 	{ 
 	  mode = 0; 
-	  vga_set_mode(320,200,8);
-	  c64ptr->io_->init_color_palette();
+	  c64ptr->mon_->Stop();
 	  return;
 	}
-      }*/
+      }
+      
+      if(c == 0x03) // Reset machine (F10)
+      {
+	c64ptr->reset = true;
+	return;
+      }
       
       switch(mode)
       {
 	case 0: c64ptr->io_->OnKeyDown(c); break;
-	case 1: c64ptr->io_->mon_->OnKeyDown(c); break;
+	case 1: c64ptr->mon_->OnKeyDown(c); break;
       }
     }
     
@@ -82,7 +84,7 @@ public:
       switch(mode)
       {
 	case 0: c64ptr->io_->OnKeyUp(c); break;
-	case 1: c64ptr->io_->mon_->OnKeyUp(c); break;
+	case 1: c64ptr->mon_->OnKeyUp(c); break;
       }
     }
 };
@@ -99,9 +101,7 @@ extern "C" void callConstructors()
 
 extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot_magic*/)
 {
-    //vga_set_mode(80,25,16);
-  
-    multiboot_info_t * mboot_hdr = (multiboot_info_t *)multiboot_structure;
+    mboot_hdr = (multiboot_info_t *)multiboot_structure;
     
     if ((mboot_hdr->flags & (1<<6)) == 0) {
         // The memory map is not present, we should probably halt the system
@@ -115,9 +115,15 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     next_free_frame = 1;
     framebuffer_addr = (uint32_t*)mboot_hdr->framebuffer_addr;
     
+    vga_init((uint32_t*)mboot_hdr->framebuffer_addr, (uint32_t)mboot_hdr->framebuffer_width,
+	   (uint32_t)mboot_hdr->framebuffer_height, (uint32_t)mboot_hdr->framebuffer_pitch,
+	     (uint8_t)mboot_hdr->framebuffer_bpp);
     
+    vga_clear();
+    
+   
     printf("OS/64 Operating System Starting...\n");
- 
+
     GlobalDescriptorTable gdt;
     
     // Get start of memory that we can safely work from
@@ -209,58 +215,29 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     //while(1) {};
     
-    printf("\n\nSetting video mode...............");
-    //while(1) {};
-    
-    //vga_set_mode(640,480,4);
-  /*  vga_set_mode(320,240,8);
-    vga_gfx_clear(0);
-    vga_draw_line(0,0,400,20,15);
-    
-    while(1) {};
-    */
-   
-    SpeakerDriver speaker;
-    
-    
-    printf("[OK]\n");
-       
-    printf("\n\nScreen %d X %d X %d - Pitch %d", (uint32_t)mboot_hdr->framebuffer_width,
+    printf("\n\nSetting video mode...............[OK]");
+    printf("\n - Screen %d X %d X %d - Pitch %d", (uint32_t)mboot_hdr->framebuffer_width,
 	   (uint32_t)mboot_hdr->framebuffer_height, (uint8_t)mboot_hdr->framebuffer_bpp,
 	   (uint32_t)mboot_hdr->framebuffer_pitch);
-    
 
-    C64 c64;
-    c64ptr = &c64;
-    c64ptr->sid_->speaker(&speaker);
-    c64ptr->io_->init_display((uint32_t*)mboot_hdr->framebuffer_addr, (uint32_t)mboot_hdr->framebuffer_width,
-			 (uint32_t)mboot_hdr->framebuffer_height, (uint32_t)mboot_hdr->framebuffer_pitch, 
-			 (uint8_t)mboot_hdr->framebuffer_bpp);
+    SpeakerDriver speaker;
     
-    c64ptr->io_->fat32(&fat32);
-    c64ptr->io_->mon_->fat32(&fat32);
-    c64ptr->io_->serial(&serial);
-    c64.start();
-  
-    
-    /*
-    if(vga_set_mode(320,200,8))
+    while(true)
     {
-      printf("[OK]\n");
       C64 c64;
       c64ptr = &c64;
       c64ptr->sid_->speaker(&speaker);
+      c64ptr->io_->init_display((uint32_t*)mboot_hdr->framebuffer_addr, (uint32_t)mboot_hdr->framebuffer_width,
+			  (uint32_t)mboot_hdr->framebuffer_height, (uint32_t)mboot_hdr->framebuffer_pitch, 
+			  (uint8_t)mboot_hdr->framebuffer_bpp);
+      
       c64ptr->io_->fat32(&fat32);
-      c64ptr->io_->mon_->fat32(&fat32);
       c64ptr->io_->serial(&serial);
+      c64ptr->mon_->fat32(&fat32);
+      
       c64.start();
+      //TODO: Memory leak possible here.  Calling destructor at the moment causes freeze
     }
-    else
-    {
-      printf("[FAILED]\n");
-      while(1) {};
-    }*/
-  
     
 }
 

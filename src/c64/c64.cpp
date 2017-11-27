@@ -26,11 +26,8 @@ C64::C64()
   cia2_ = new Cia2();
   vic_  = new Vic();
   sid_  = new Sid();
+  mon_  = new Monitor();
   
-  mon_ = new Monitor();
-  mon_->cpu(cpu_);
-  mon_->mem(mem_);
-
   /* init cpu */
   cpu_->memory(mem_);
   cpu_->reset();
@@ -46,14 +43,17 @@ C64::C64()
   /* init io */
   io_->cpu(cpu_);
   io_->memory(mem_);
-  io_->monitor(mon_);
+
   /* DMA */
   mem_->vic(vic_);
   mem_->cia1(cia1_);
   mem_->cia2(cia2_);
   mem_->sid(sid_);
  /* r2 support */
-  
+ 
+  mon_->io(io_);
+  mon_->mem(mem_);
+  mon_->cpu(cpu_);
 }
 
 C64::~C64()
@@ -65,6 +65,7 @@ C64::~C64()
   delete vic_;
   delete sid_;
   delete io_;
+  delete mon_;
 
 }
 
@@ -73,22 +74,37 @@ void C64::start()
   /* main emulator loop */
   while(true)
   {
-    /* CIA1 */
-    if(!cia1_->emulate())
-      break;
-    /* CIA2 */
-    if(!cia2_->emulate())
-      break;
-    /* CPU */
-    if(!cpu_->emulate(io_->step))
-      break;
-    /* VIC-II */
-    if(!vic_->emulate())
-      break;
-    /* IO */
-    if(!io_->emulate())
-      break;
+    if(isRunning)
+    {
+      /* CIA1 */
+      if(!cia1_->emulate())
+	break;
+      /* CIA2 */
+      if(!cia2_->emulate())
+	break;
+      /* CPU */
+      if(!cpu_->emulate(io_->step))
+	break;
+      /* VIC-II */
+      if(!vic_->emulate())
+	break;
+      /* IO */
+      if(!io_->emulate())
+	break;
+      if(reset)
+	break;
+    }
+    else
+    {
+      mon_->Start();
+      isRunning = true;
+    }
   }
+}
+
+void C64::stop()
+{
+  isRunning = false;
 }
 
 

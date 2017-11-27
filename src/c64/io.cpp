@@ -245,14 +245,7 @@ void IO::OnKeyDown(uint8_t c)
     cpu_->nmi();
     return;
   }
-  
-  if(c == 0x03) // Reset machine (F10)
-  {
-    cpu_->reset();
-    return;
-  }
-  
-  
+   
   for(int row=0;row<8;row++)
     for(int col=0;col<8;col++)
       if(kbd[row][col] == c)
