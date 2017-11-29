@@ -15,6 +15,7 @@
 #include <drivers/ata.h>
 #include <drivers/serial.h>
 #include <drivers/speaker.h>
+#include <drivers/rtc.h>
 #include <multitasking.h>
 #include <filesystem/fat.h>
 #include <c64/c64.h>
@@ -204,7 +205,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     printf("\n\nInitializing filesystem driver...");
     Fat32 fat32(&ata0m,0);
-    printf("[OK]\n");
+    printf("[OK]");
 
     //fat32.ReadPartitions();
     //fat32.ReadDir();
@@ -215,13 +216,21 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     //while(1) {};
     
-    printf("\n\nSetting video mode...............[OK]");
-    printf("\n - Screen %d X %d X %d - Pitch %d", (uint32_t)mboot_hdr->framebuffer_width,
+    printf("\nObtaining video mode.............[OK]");
+    printf(" Screen %d X %d X %d - Pitch %d", (uint32_t)mboot_hdr->framebuffer_width,
 	   (uint32_t)mboot_hdr->framebuffer_height, (uint8_t)mboot_hdr->framebuffer_bpp,
 	   (uint32_t)mboot_hdr->framebuffer_pitch);
 
     SpeakerDriver speaker;
+
+    RTCDriver rtc;
+    struct datetime* curDateTime;
+    rtc.GetRTC(curDateTime);
     
+    printf("\n\nGetting date: %d/%d/%d", curDateTime->month, curDateTime->day, curDateTime->year);
+    printf("\nGetting time: %d:%d:%d", curDateTime->hour, curDateTime->minute, curDateTime->second);
+    
+     
     while(true)
     {
       C64 c64;
@@ -233,6 +242,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
       
       c64ptr->io_->fat32(&fat32);
       c64ptr->io_->serial(&serial);
+      c64ptr->io_->rtc(&rtc);
       c64ptr->mon_->fat32(&fat32);
       
       c64.start();

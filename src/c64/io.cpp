@@ -148,6 +148,25 @@ bool IO::emulate()
       break;
   }
 
+  static uint16_t waiter = 0;
+  
+  if(waiter == 1000)
+  {
+    struct datetime curDateTime;
+    rtc_->GetRTC(&curDateTime);
+    
+    mem_->write_byte(0x0334, (uint8_t)curDateTime.month);
+    mem_->write_byte(0x0335, (uint8_t)curDateTime.day);
+    mem_->write_byte(0x0336, (uint8_t)(curDateTime.year>>8));
+    mem_->write_byte(0x0337, (uint8_t)(curDateTime.year & 0xFF));
+    mem_->write_byte(0x0338, (uint8_t)curDateTime.hour);
+    mem_->write_byte(0x0339, (uint8_t)curDateTime.minute);
+    mem_->write_byte(0x033a, (uint8_t)curDateTime.second);
+    
+    waiter = 0;
+  }
+  
+  waiter++;
   return retval_; 
 }
 

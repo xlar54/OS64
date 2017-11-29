@@ -317,7 +317,7 @@ void Memory::patch_ram()
 #endif
   
   // Used to load a PRG file into RAM so it can be saved to disk
-  /*
+  
   uint16_t sz = paku_prg_size;
   uint16_t loadAddr = (paku_prg[1] << 8) + paku_prg[0];
   for(uint16_t i=2;i<sz;i++)
@@ -325,7 +325,7 @@ void Memory::patch_ram()
   
   mem_ram_[0x2D] = (0x0801 + sz-2) & 0xFF; // poke low byte to 45  
   mem_ram_[0x2E] = (0x0801 + sz-2) >> 8; // poke hi byte to 46
-  */
+  
   // remember to do a CLR before running program
 }
 

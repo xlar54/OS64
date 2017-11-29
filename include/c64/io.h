@@ -10,6 +10,7 @@
 #include <drivers/ata.h>
 #include <filesystem/fat.h>
 #include <drivers/serial.h>
+#include <drivers/rtc.h>
 
 //#define _NO_BORDER_
 
@@ -69,6 +70,7 @@ class IO
     void file_get();
     
     SerialDriver *serial_;
+    RTCDriver *rtc_;
 
     uint8_t *vscreen_; 		// pointer to the offset of virtual screen.
     uint8_t *pscreen_;
@@ -93,6 +95,7 @@ public:
     void memory(Memory *m) {mem_ = m;};
     void fat32(Fat32 *m) { fat32_ = m; };
     void serial(SerialDriver *m) { serial_ = m; };
+    void rtc(RTCDriver *m) { rtc_ = m; };
     
     bool step = false;
     uint16_t color_palette[16];
