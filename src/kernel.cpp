@@ -16,10 +16,13 @@
 #include <drivers/serial.h>
 #include <drivers/speaker.h>
 #include <drivers/rtc.h>
+#include <drivers/pit.h>
 #include <multitasking.h>
 #include <filesystem/fat.h>
 #include <c64/c64.h>
 #include <c64/monitor.h>
+
+uint32_t current_milli = 0;
 
 multiboot_info_t* mboot_hdr;     
 multiboot_info_t *verified_mboot_hdr;
@@ -90,6 +93,22 @@ public:
     }
 };
 
+
+class IOPITEventHandler : public PITEventHandler
+{
+private:
+public:
+  IOPITEventHandler() 
+  {
+  }
+  
+  void OnTick() 
+  {
+    current_milli++;  
+    //printf("tick...");
+  }
+};
+
 // Set up C++ object constructors.  This has to be set up and called manually
 typedef void (*constructor)();
 extern "C" constructor start_ctors;
@@ -156,6 +175,10 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     SerialEventHandler serialhandler;
     SerialDriver serial(&interrupts, &serialhandler);
     drvManager.AddDriver(&serial);
+    
+    IOPITEventHandler timerhandler;
+    PITDriver pit(&interrupts, &timerhandler);
+    drvManager.AddDriver(&pit);
     
     PeripheralComponentInterconnectController PCIController;
     PCIController.SelectDrivers(&drvManager, &interrupts);

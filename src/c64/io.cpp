@@ -19,6 +19,9 @@
 #include <c64/vic.h>
 #include <lib/vga.h>
 
+// current milliseconds since epoch
+extern uint32_t current_milli;
+
 // The 64 has only 64 keys. This matrix represents the keyboard
 // to the CIA1 chip. PC keys must supply the same code for a keypress
 // to be detected.  But actual key mappings can be changed
@@ -65,8 +68,6 @@ IO::IO()
   
   cols_ = Vic::kVisibleScreenWidth;
   rows_ = Vic::kVisibleScreenHeight;
-  
-  //vgaMem = (uint8_t*) 0xA0000;
 }
 
 IO::~IO()
@@ -150,7 +151,7 @@ bool IO::emulate()
 
   static uint16_t waiter = 0;
   
-  if(waiter == 1000)
+  if(waiter == 100)
   {
     struct datetime curDateTime;
     rtc_->GetRTC(&curDateTime);
@@ -167,6 +168,7 @@ bool IO::emulate()
   }
   
   waiter++;
+  
   return retval_; 
 }
 
@@ -335,10 +337,15 @@ void IO::type_character(char c)
 
 void IO::vsync()
 {
-    // wait until done with vertical retrace */
-    //while  ((inb(0x03da) & 0x08)) {};
-    // wait until done refreshing */
-    //while (!(inb(0x03da) & 0x08)) {};
+  // This normally is called at the end of 
+  // the screen_refresh() function
+  uint32_t current = current_milli;
+  uint32_t t = current - prev_frame_milli;
+  uint32_t ttw = (Vic::kRefreshRate*1000) - t;
+  
+  while(current_milli < current+ ttw) {};
+  prev_frame_milli = current_milli;
+  
 }
 
 void IO::file_load()

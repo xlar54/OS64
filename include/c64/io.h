@@ -40,7 +40,6 @@ class IO
     uint32_t *frame_;
     size_t cols_;
     size_t rows_;
-    //unsigned int color_palette[16];
     
     uint8_t keyboard_matrix_[8];
     bool retval_;
@@ -59,7 +58,6 @@ class IO
     unsigned int next_key_event_at_;
     static const int kWait = 18000;
     /* vertical refresh sync */
-    //std::chrono::high_resolution_clock::time_point prev_frame_was_at_;
     void vsync();
         
     Fat32 *fat32_;
@@ -99,6 +97,7 @@ public:
     
     bool step = false;
     uint16_t color_palette[16];
+    uint32_t prev_frame_milli;
     
     void init_color_palette();
     void init_keyboard();
@@ -135,25 +134,30 @@ public:
       static uint8_t skipframes = 10;
       if(skipframes == 10)
       {
-	for(int cy = 0; cy < screen_height_; cy++)
-	{
-	    for(int cx = 0; cx < screen_pitch_; cx++)
+	//uint32_t pos = 0;
+	for(uint16_t cy = 0; cy < screen_height_; cy++)
+	    for(uint16_t cx = 0; cx < screen_pitch_; cx++)
 	    {
-		int nearestMatch =  (((int)(cy / scaleHeight) * VIRT_WIDTH) + ((int)(cx / scaleWidth)));
+	      //if(cy % 2 == 0) // Scanlines
+	      //{
+		uint32_t nearestMatch =  (((uint16_t)(cy / scaleHeight) * VIRT_WIDTH) + ((uint16_t)(cx / scaleWidth)));
 		pscreen_[cy * screen_pitch_ + cx] = vscreen_[nearestMatch];
+	      //}
 	    }
-	}
 	
-	for(int x=0;x<screen_pitch_*screen_height_;x+=pixel_width_)
+	for(uint32_t x=0;x<screen_pitch_*screen_height_;x+=pixel_width_)
 	{
 	  *(vgaMem_+x) = color_palette[*(pscreen_+x)] & 255;
 	  *(vgaMem_+x+1) = (color_palette[*(pscreen_+x)] >> 8) & 255;
 	}
 	
+	//vsync();
 	skipframes = 0;
       }
       skipframes++;
     };
+    
+    
 };
 
 #endif

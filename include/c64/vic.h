@@ -115,7 +115,8 @@ class Vic
     /* constants */
     static const int kScreenLines = 312;
     //static const int kScreenCols  = 504;
-
+    static const double kRefreshRate = 1 / 50.125; // ~50Hz (PAL)
+    
 #ifdef _NO_BORDER_
     static const int kVisibleScreenWidth  = 320;
     static const int kVisibleScreenHeight = 200;
@@ -123,7 +124,6 @@ class Vic
     static const int kLastVisibleLine = 200;
     static const int kLineCycles = 63;
     static const int kBadLineCycles = 23;
-    static const double kRefreshRate = 1 / 50.125; // ~50Hz (PAL)
 #else
     static const int kVisibleScreenWidth  = 403;
     static const int kVisibleScreenHeight = 284;
@@ -131,7 +131,6 @@ class Vic
     static const int kLastVisibleLine = 298;
     static const int kLineCycles = 63;
     static const int kBadLineCycles = 23;
-    static const double kRefreshRate = 1 / 50.125; // ~50Hz (PAL)
 #endif
 
     static const int kSpritePtrsOffset = 0x3f8;

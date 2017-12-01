@@ -55,7 +55,7 @@ class C64
     bool reset = false;
     void start();
     void stop();
-
+   
     Cpu * cpu(){return cpu_;};
     Memory * memory(){return mem_;};
     IO * io(){return io_;};

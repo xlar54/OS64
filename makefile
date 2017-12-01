@@ -23,6 +23,7 @@ objects = obj/loader.o \
           obj/drivers/serial.o \
           obj/drivers/speaker.o \
           obj/drivers/rtc.o \
+          obj/drivers/pit.o \
           obj/filesystem/fat.o \
           obj/c64/c64.o \
           obj/c64/cia1.o \
