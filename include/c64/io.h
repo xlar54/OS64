@@ -129,10 +129,13 @@ public:
 	*(vscreen_ + y * VIRT_WIDTH  + i) = color;
     };
     
+#define SKIPFRAMES 10
+    
     inline void screen_refresh() {
       
-      static uint8_t skipframes = 10;
-      if(skipframes == 10)
+      static uint8_t skipframes = SKIPFRAMES;
+
+      if(skipframes == SKIPFRAMES)
       {
 	//uint32_t pos = 0;
 	for(uint16_t cy = 0; cy < screen_height_; cy++)
@@ -147,14 +150,19 @@ public:
 	
 	for(uint32_t x=0;x<screen_pitch_*screen_height_;x+=pixel_width_)
 	{
-	  *(vgaMem_+x) = color_palette[*(pscreen_+x)] & 255;
-	  *(vgaMem_+x+1) = (color_palette[*(pscreen_+x)] >> 8) & 255;
+	  uint16_t color = color_palette[*(pscreen_+x)];
+	  *(vgaMem_+x) = color & 255;
+	  *(vgaMem_+x+1) = (color >> 8) & 255;
 	}
 	
 	//vsync();
+#ifdef SKIPFRAMES
 	skipframes = 0;
+#endif
       }
+#ifdef SKIPFRAMES
       skipframes++;
+#endif
     };
     
     
