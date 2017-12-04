@@ -243,6 +243,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     printf(" Screen %d X %d X %d - Pitch %d", (uint32_t)mboot_hdr->framebuffer_width,
 	   (uint32_t)mboot_hdr->framebuffer_height, (uint8_t)mboot_hdr->framebuffer_bpp,
 	   (uint32_t)mboot_hdr->framebuffer_pitch);
+    printf("\n                                      VGA Memory @ $%08X",(uint32_t)mboot_hdr->framebuffer_addr);
 
     SpeakerDriver speaker;
 
@@ -252,8 +253,7 @@ extern "C" void kernelMain(const void* multiboot_structure, uint32_t /*multiboot
     
     printf("\n\nGetting date: %d/%d/%d", curDateTime->month, curDateTime->day, curDateTime->year);
     printf("\nGetting time: %d:%d:%d", curDateTime->hour, curDateTime->minute, curDateTime->second);
-    
-     
+
     while(true)
     {
       C64 c64;

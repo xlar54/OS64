@@ -22,6 +22,9 @@
 #define VIRT_HEIGHT 200
 #endif
 
+// current milliseconds since epoch
+extern uint32_t current_milli;
+
 using namespace myos::hardwarecommunication;
 using namespace myos::filesystem;
 using namespace myos::drivers;
@@ -70,8 +73,8 @@ class IO
     SerialDriver *serial_;
     RTCDriver *rtc_;
 
-    uint8_t *vscreen_; 		// pointer to the offset of virtual screen.
-    uint8_t *pscreen_;
+    uint16_t *vscreen_; 		// pointer to the offset of virtual screen.
+    uint16_t *pscreen_;
     double scaleWidth;
     double scaleHeight;
     
@@ -81,6 +84,8 @@ class IO
     uint32_t screen_pitch_;
     uint8_t screen_bpp_;
     uint8_t pixel_width_;
+    
+    uint32_t prev_frame_milli;
 
 public:
     IO();
@@ -97,7 +102,6 @@ public:
     
     bool step = false;
     uint16_t color_palette[16];
-    uint32_t prev_frame_milli;
     
     void init_color_palette();
     void init_keyboard();
@@ -110,7 +114,7 @@ public:
     inline uint8_t keyboard_matrix_row(int col){return keyboard_matrix_[col];};
     
     inline void put_pixel(int x,int y, int color) {
-      unsigned char *pixel = vgaMem_ + y*screen_pitch_ + x*pixel_width_;     
+      uint8_t *pixel = vgaMem_ + y*screen_pitch_ + x*pixel_width_;     
       *pixel = color_palette[color] & 255;              
       *(pixel + 1) = (color_palette[color] >> 8) & 255;
     };
@@ -129,24 +133,17 @@ public:
 	*(vscreen_ + y * VIRT_WIDTH  + i) = color;
     };
     
-#define SKIPFRAMES 10
-    
     inline void screen_refresh() {
-      
-      static uint8_t skipframes = SKIPFRAMES;
 
-      if(skipframes == SKIPFRAMES)
-      {
-	//uint32_t pos = 0;
-	for(uint16_t cy = 0; cy < screen_height_; cy++)
-	    for(uint16_t cx = 0; cx < screen_pitch_; cx++)
-	    {
-	      //if(cy % 2 == 0) // Scanlines
-	      //{
-		uint32_t nearestMatch =  (((uint16_t)(cy / scaleHeight) * VIRT_WIDTH) + ((uint16_t)(cx / scaleWidth)));
-		pscreen_[cy * screen_pitch_ + cx] = vscreen_[nearestMatch];
-	      //}
-	    }
+      for(uint16_t cy = 0; cy < screen_height_; cy++)
+	for(uint16_t cx = 0; cx < screen_pitch_; cx++)
+	{
+	  if(cy % 2 == 0) // Scanlines
+	  {
+	    uint32_t nearestMatch =  (((uint16_t)(cy / scaleHeight) * VIRT_WIDTH) + ((uint16_t)(cx / scaleWidth)));
+	    pscreen_[cy * screen_pitch_ + cx] = vscreen_[nearestMatch];
+	  }
+	}
 	
 	for(uint32_t x=0;x<screen_pitch_*screen_height_;x+=pixel_width_)
 	{
@@ -154,16 +151,31 @@ public:
 	  *(vgaMem_+x) = color & 255;
 	  *(vgaMem_+x+1) = (color >> 8) & 255;
 	}
-	
-	//vsync();
-#ifdef SKIPFRAMES
-	skipframes = 0;
-#endif
-      }
-#ifdef SKIPFRAMES
-      skipframes++;
-#endif
+      
+      sync();
+            
+      // no scaling
+      /*
+      for(uint16_t y=0;y<284;y++)
+	for(uint16_t x=0;x<403;x++)
+	  put_pixel(x,y,vscreen_[y*403+x]);*/
     };
+    
+    inline void sync()
+    {
+      uint32_t current = current_milli;
+      uint32_t t = current - prev_frame_milli;
+      uint32_t ttw = 19 - t; //(Vic::kRefreshRate*1000) - t;
+      
+      delay(current_milli - current+ttw);
+      prev_frame_milli = current_milli;
+    }
+
+    inline void delay(uint32_t milliseconds)
+    {
+      uint32_t startmilli = current_milli;
+      while(current_milli < startmilli + milliseconds)  {};
+    }
     
     
 };

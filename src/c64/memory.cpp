@@ -16,6 +16,7 @@
  */
 #include <memorymanagement.h>
 #include <c64/c64rom.h>
+#include <c64/customrom.h>
 #include <c64/memory.h>
 #include <c64/vic.h>
 #include <c64/cia1.h>
@@ -350,8 +351,8 @@ void Memory::patch_roms()
   mem_rom_[hack+45] = 0x3A;	// PETSCII for :
   mem_rom_[hack+53] = 0x2B;	// PETSCII for +
   
-  hack = 0x28A;
-  mem_ram_[hack] = 64;		// Disable key repeat (for fast machines)
+  //hack = 0x28A;
+  //mem_ram_[hack] = 64;		// Disable key repeat (for fast machines)
 
 #define DOS_PATCH
   

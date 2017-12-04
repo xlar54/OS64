@@ -26,6 +26,30 @@ void Sid::write_register(uint8_t r, uint8_t v)
       play();
       break;
     }
+    case 0x07:
+    {
+      freqLo = v;
+      play();
+      break;
+    }
+    case 0x08:
+    {
+      freqHi = v;
+      play();
+      break;
+    }
+    case 0x0e:
+    {
+      freqLo = v;
+      play();
+      break;
+    }
+    case 0x0f:
+    {
+      freqHi = v;
+      play();
+      break;
+    }
     case 0x18:	// volume
     {
       volume = v;

@@ -19,9 +19,6 @@
 #include <c64/vic.h>
 #include <lib/vga.h>
 
-// current milliseconds since epoch
-extern uint32_t current_milli;
-
 // The 64 has only 64 keys. This matrix represents the keyboard
 // to the CIA1 chip. PC keys must supply the same code for a keypress
 // to be detected.  But actual key mappings can be changed
@@ -98,8 +95,8 @@ void IO::init_display(uint32_t* vgaMemAddress, uint32_t width, uint32_t height, 
   screen_bpp_ = bpp;
   pixel_width_ = bpp/8;
   
-  vscreen_ = new uint8_t[VIRT_WIDTH  * VIRT_HEIGHT];
-  pscreen_ = new uint8_t[screen_pitch_ * screen_height_];
+  vscreen_ = new uint16_t[VIRT_WIDTH  * VIRT_HEIGHT];
+  pscreen_ = new uint16_t[screen_pitch_ * screen_height_];
 
   scaleWidth =  (double)screen_pitch_ / (double)VIRT_WIDTH;
   scaleHeight = (double)screen_height_ / (double)VIRT_HEIGHT;
@@ -109,20 +106,20 @@ void IO::init_color_palette()
 {
  color_palette[0] = ((0x00>>3)<<11) | ((0x00>>2)<<5) | (0x00>>3);
  color_palette[1] = ((0xff>>3)<<11) | ((0xff>>2)<<5) | (0xff>>3);
- color_palette[2] = ((0x68>>3)<<11) | ((0x37>>2)<<5) | (0x2b>>3);
- color_palette[3] = ((0x70>>3)<<11) | ((0xa4>>2)<<5) | (0xb2>>3);
- color_palette[4] = ((0x6f>>3)<<11) | ((0x3d>>2)<<5) | (0x86>>3);
- color_palette[5] = ((0x58>>3)<<11) | ((0x8d>>2)<<5) | (0x43>>3);
- color_palette[6] = ((0x35>>3)<<11) | ((0x28>>2)<<5) | (0x79>>3);
- color_palette[7] = ((0xb8>>3)<<11) | ((0xc7>>2)<<5) | (0x6f>>3);
- color_palette[8] = ((0x6f>>3)<<11) | ((0x4f>>2)<<5) | (0x25>>3);
- color_palette[9] = ((0x43>>3)<<11) | ((0x39>>2)<<5) | (0x00>>3);
- color_palette[10] = ((0x9a>>3)<<11) | ((0x67>>2)<<5) | (0x59>>3);
- color_palette[11] = ((0x44>>3)<<11) | ((0x44>>2)<<5) | (0x44>>3);
- color_palette[12] = ((0x6c>>3)<<11) | ((0x6c>>2)<<5) | (0x6c>>3);
- color_palette[13] = ((0x9a>>3)<<11) | ((0xd2>>2)<<5) | (0x84>>3);
- color_palette[14] = ((0x6c>>3)<<11) | ((0x5e>>2)<<5) | (0xb5>>3);
- color_palette[15] = ((0x95>>3)<<11) | ((0x95>>2)<<5) | (0x95>>3);
+ color_palette[2] = ((0x88>>3)<<11) | ((0x00>>2)<<5) | (0x00>>3);
+ color_palette[3] = ((0xAA>>3)<<11) | ((0xFF>>2)<<5) | (0xEE>>3);
+ color_palette[4] = ((0xCC>>3)<<11) | ((0x44>>2)<<5) | (0xCC>>3);
+ color_palette[5] = ((0x00>>3)<<11) | ((0xCC>>2)<<5) | (0x55>>3);
+ color_palette[6] = ((0x00>>3)<<11) | ((0x00>>2)<<5) | (0xAA>>3);
+ color_palette[7] = ((0xEE>>3)<<11) | ((0xEE>>2)<<5) | (0x77>>3);
+ color_palette[8] = ((0xDD>>3)<<11) | ((0x88>>2)<<5) | (0x55>>3);
+ color_palette[9] = ((0x66>>3)<<11) | ((0x44>>2)<<5) | (0x00>>3);
+ color_palette[10] = ((0xFF>>3)<<11) | ((0x77>>2)<<5) | (0x77>>3);
+ color_palette[11] = ((0x33>>3)<<11) | ((0x33>>2)<<5) | (0x33>>3);
+ color_palette[12] = ((0x77>>3)<<11) | ((0x77>>2)<<5) | (0x77>>3);
+ color_palette[13] = ((0xAAa>>3)<<11) | ((0xFF>>2)<<5) | (0x66>>3);
+ color_palette[14] = ((0x00>>3)<<11) | ((0x88>>2)<<5) | (0xFF>>3);
+ color_palette[15] = ((0xBB>>3)<<11) | ((0xBB>>2)<<5) | (0xBB>>3);
 }
 
 // emulation /////////////////////////////////////////////////////////////////// 
@@ -149,7 +146,7 @@ bool IO::emulate()
       break;
   }
 
-  static uint16_t waiter = 0;
+  /*static uint16_t waiter = 0;
   
   if(waiter == 100)
   {
@@ -167,10 +164,11 @@ bool IO::emulate()
     waiter = 0;
   }
   
-  waiter++;
-  
+  waiter++;*/
+ 
   return retval_; 
 }
+
 
 void IO::process_events()
 {
@@ -335,7 +333,7 @@ void IO::type_character(char c)
 
 }
 
-void IO::vsync()
+/*void IO::vsync()
 {
   // This normally is called at the end of 
   // the screen_refresh() function
@@ -346,7 +344,7 @@ void IO::vsync()
   while(current_milli < current+ ttw) {};
   prev_frame_milli = current_milli;
   
-}
+}*/
 
 void IO::file_load()
 {

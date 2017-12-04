@@ -40,7 +40,7 @@ class C64
 {
   private:
     bool isRunning = true;
-    
+
   public: 
     C64();
     ~C64();
@@ -61,6 +61,7 @@ class C64
     IO * io(){return io_;};
     
     struct cpuState* getCpuState();
+
 };
 
 #endif

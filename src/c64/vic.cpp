@@ -124,7 +124,7 @@ bool Vic::emulate()
 uint8_t Vic::read_register(uint8_t r)
 {
   uint8_t retval;
-  switch(r)
+  switch(r % 64)	// VIC registers repeat every 64 bytes
   {
   /* get X coord of sprite n*/
   case 0x0:
@@ -204,21 +204,26 @@ uint8_t Vic::read_register(uint8_t r)
   case 0x1d:
     retval = sprite_double_width_;
     break;
+  // Always returns zero
+  case 0x1e:
+  case 0x1f:
+    retval = 0;
+    break;
   /* border color */
   case 0x20:
-    retval = border_color_;
+    retval = 0xF0 | border_color_;  // upper 4 bits are always 1
     break;
   /* background colors */
   case 0x21:
   case 0x22:
   case 0x23:
   case 0x24:
-    retval = bgcolor_[r-0x21];
+    retval = 0xF0 | bgcolor_[r-0x21];  // upper 4 bits are always 1
     break;
   /* sprite colors */
   case 0x25:
   case 0x26:
-    retval = sprite_shared_colors_[r-0x25];
+    retval = 0xF0 | sprite_shared_colors_[r-0x25];
     break;
   case 0x27:
   case 0x28:
@@ -228,7 +233,7 @@ uint8_t Vic::read_register(uint8_t r)
   case 0x2c:
   case 0x2d:
   case 0x2e:
-    retval = sprite_colors_[r-0x27];
+    retval = 0xF0 | sprite_colors_[r-0x27];
     break;
   /* unused */
   case 0x2f:
@@ -257,7 +262,7 @@ uint8_t Vic::read_register(uint8_t r)
 
 void Vic::write_register(uint8_t r, uint8_t v)
 {
-  switch(r)
+  switch(r % 64)	// VIC registers repeat every 64 bytes
   {
   /* store X coord of sprite n*/
   case 0x0:
@@ -343,19 +348,19 @@ void Vic::write_register(uint8_t r, uint8_t v)
     break;
   /* border color */
   case 0x20:
-    border_color_ = v;
+    border_color_ = v & 0xF; // strip upper 4 bits (always 1)
     break;
   /* background colors */
   case 0x21:
   case 0x22:
   case 0x23:
   case 0x24:
-    bgcolor_[r-0x21] = v;
+    bgcolor_[r-0x21] = v & 0xF; // strip upper 4 bits (always 1)
     break;
   /* sprite colors */
   case 0x25:
   case 0x26:
-    sprite_shared_colors_[r-0x25] = v;
+    sprite_shared_colors_[r-0x25] = v & 0xF;
     break;
   case 0x27:
   case 0x28:
@@ -365,7 +370,7 @@ void Vic::write_register(uint8_t r, uint8_t v)
   case 0x2c:
   case 0x2d:
   case 0x2e:
-    sprite_colors_[r-0x27] = v;
+    sprite_colors_[r-0x27] = v & 0xF;
     break;
   /* unused */
   case 0x2f:
