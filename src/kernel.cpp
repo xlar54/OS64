@@ -76,6 +76,14 @@ public:
 	return;
       }
       
+      if(c == 0x04) // toggle skipframes (F12)
+      {
+	if(c64ptr->io_->SkipFrames == 10)
+	  c64ptr->io_->SkipFrames = 0;
+	else
+	  c64ptr->io_->SkipFrames = 10;
+      }
+      
       switch(mode)
       {
 	case 0: c64ptr->io_->OnKeyDown(c); break;

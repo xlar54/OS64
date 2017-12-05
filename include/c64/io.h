@@ -100,6 +100,7 @@ public:
     void serial(SerialDriver *m) { serial_ = m; };
     void rtc(RTCDriver *m) { rtc_ = m; };
     
+    uint8_t SkipFrames = 0;
     bool step = false;
     uint16_t color_palette[16];
     
@@ -135,25 +136,36 @@ public:
     
     inline void screen_refresh() {
 
-      for(uint16_t cy = 0; cy < screen_height_; cy++)
-	for(uint16_t cx = 0; cx < screen_pitch_; cx++)
-	{
-	  if(cy % 2 == 0) // Scanlines
-	  {
-	    uint32_t nearestMatch =  (((uint16_t)(cy / scaleHeight) * VIRT_WIDTH) + ((uint16_t)(cx / scaleWidth)));
-	    pscreen_[cy * screen_pitch_ + cx] = vscreen_[nearestMatch];
-	  }
-	}
-	
-	for(uint32_t x=0;x<screen_pitch_*screen_height_;x+=pixel_width_)
-	{
-	  uint16_t color = color_palette[*(pscreen_+x)];
-	  *(vgaMem_+x) = color & 255;
-	  *(vgaMem_+x+1) = (color >> 8) & 255;
-	}
+      static uint8_t skipCtr = 0;
       
-      sync();
-            
+      if(SkipFrames == 0 || skipCtr == SkipFrames)
+      {
+	for(uint16_t cy = 0; cy < screen_height_; cy++)
+	  for(uint16_t cx = 0; cx < screen_pitch_; cx++)
+	  {
+	    if(cy % 2 == 0) // Scanlines
+	    {
+	      uint32_t nearestMatch =  (((uint16_t)(cy / scaleHeight) * VIRT_WIDTH) + ((uint16_t)(cx / scaleWidth)));
+	      pscreen_[cy * screen_pitch_ + cx] = vscreen_[nearestMatch];
+	    }
+	  }
+	  
+	  for(uint32_t x=0;x<screen_pitch_*screen_height_;x+=pixel_width_)
+	  {
+	    uint16_t color = color_palette[*(pscreen_+x)];
+	    *(vgaMem_+x) = color & 255;
+	    *(vgaMem_+x+1) = (color >> 8) & 255;
+	  }
+	
+	sync();
+	skipCtr = 0;
+      }     
+      
+      	if(SkipFrames > 0)
+	  skipCtr++;
+	else
+	  skipCtr = 0;
+      
       // no scaling
       /*
       for(uint16_t y=0;y<284;y++)
