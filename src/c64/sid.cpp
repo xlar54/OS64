@@ -68,13 +68,15 @@ void Sid::play()
     frequency = getFrequency(freqHi, freqLo);
     
     if(frequency>0)
-      speaker_->Sound(frequency/1000);
+      speaker_->Sound(frequency); ///1000);
   }
 }
 
 uint32_t Sid::getFrequency(uint8_t hi, uint8_t lo)
-{
+{  
   uint16_t v = hi * 256 + lo;
+ 
+  return v * .06097;
   
   if (v== 0x0112) return 16351;
 if (v== 0x0123) return 17324;
